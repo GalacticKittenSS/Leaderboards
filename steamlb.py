@@ -1,41 +1,20 @@
 import requests
 from bs4 import BeautifulSoup
-import typing
 
 class LeaderboardGroup():
-    def __init__(self, app_id):
+    def __init__(self, app_id, name):
         xml = requests.get(f"https://steamcommunity.com/stats/{app_id}/leaderboards/?xml=1")
         _bs = BeautifulSoup(xml.content, features="lxml")
-        self.leaderboards = []
         self.app_id = app_id
         for leaderboard in _bs.find_all("leaderboard"):
-            self.leaderboards.append(ProtoLeaderboard(leaderboard, app_id))
+          if leaderboard.find("name").text == name:
+            self.leaderboard = ProtoLeaderboard(leaderboard, app_id)
 
     def __repr__(self):
         return f"<LeaderboardGroup for {self.app_id} with {len(self.leaderboards)} leaderboards>"
 
-    def get(self, name=None, *, lbid=None, display_name=None) -> typing.Optional["Leaderboard"]:
-        if bool(lbid) + bool(name) + bool(display_name) > 1:
-            raise ValueError("You can only find a leaderboard by 1 parameter.")
-        if lbid is not None:
-            if not isinstance(lbid, int):
-                raise ValueError("lbid must be an int")
-            for leaderboard in self.leaderboards:
-              if leaderboard.lbid == lbid:
-                  return leaderboard.full()
-        elif name is not None:
-            if not isinstance(name, str):
-                raise ValueError("name must be a str")
-            for leaderboard in self.leaderboards:
-              if str(leaderboard.name) == name:
-                  return leaderboard.full()
-        elif display_name is not None:
-            if not isinstance(display_name, str):
-                raise ValueError("display_name must be a str")
-            for leaderboard in self.leaderboards:
-              if str(leaderboard.display_name) == display_name:
-                  return leaderboard.full()
-        return None
+    def get(self):
+      return self.leaderboard.full()
 
 class ProtoLeaderboard:
     def __init__(self, soup, app_id):
@@ -46,7 +25,7 @@ class ProtoLeaderboard:
         self.entries = int(soup.entries.text)
         self.sort_method = int(soup.sortmethod.text)
         self.display_type = int(soup.displaytype.text)
-        self.app_id = app_id\
+        self.app_id = app_id
 
     def full(self) -> "Leaderboard":
         return Leaderboard(protoleaderboard=self)
@@ -60,7 +39,6 @@ class Leaderboard:
             self.display_name = protoleaderboard.display_name
             self.entry_number = protoleaderboard.entries
             self.sort_method = protoleaderboard.sort_method
-            self.display_type = protoleaderboard.display_type
             self.app_id = protoleaderboard.app_id
 
             self.all_entries = []
