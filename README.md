@@ -1,6 +1,6 @@
 ### OFFICIAL RELEASE
 Leaderboard bot allows you to access leaderboard data from steam and create a more competition in your discord servers.
-`Currently `Only for Portal 2``
+`Currently Only for Portal 2`
 
 **Bot Commands**
 % prefix
