@@ -1,11 +1,8 @@
 import os
-import steamlb
-import alive
 import json
 import random
+from dependencies import alive, help, steamlb, storage
 from datetime import datetime as d
-import help
-import storage
 import discord
 from discord.ext import commands, tasks
  
@@ -24,29 +21,37 @@ coop = ["mp_coop_doors", "mp_coop_race_2", "mp_coop_laser_2", "mp_coop_rat_maze"
 def addMembertoMap(member):
   print(f"Adding Member: {member}")
 
-  with open("Leaderboards/.maps.json", "r") as f:
+  with open("dependencies/Leaderboards/.maps.json", "r") as f:
     map = json.load(f)
-    
+  
+
     for value in map:
-      with open(f"Leaderboards/{map[value]}.json", "r") as f:
-        new = json.load(f)
+      try:
+        with open(f"dependencies/Leaderboards/{map[value]}.json", "r") as f:
+          new = json.load(f)
+      except:
+        with open(f"dependencies/Leaderboards/{map[value]}.json", "w") as f:
+          json.dump({}, f, indent=2)
+          
+        with open(f"dependencies/Leaderboards/{map[value]}.json", "r") as f:
+          new = json.load(f)
 
       try:
         new[member.name] = new[member.name]
       except:
         new[member.name] = "unknown"
         
-      with open(f"Leaderboards/{map[value]}.json", "w") as f:
+      with open(f"dependencies/Leaderboards/{map[value]}.json", "w") as f:
         json.dump(new, f, indent=2)
     
     try:
-      with open("steam_id.json", "r") as f:
+      with open("dependencies/steam_id.json", "r") as f:
         id = json.load(f)
     except:
-      with open("steam_id.json", "w") as f:
+      with open("dependencies/steam_id.json", "w") as f:
         json.dump({}, f, indent=2)
         
-      with open("steam_id.json", "r") as f:
+      with open("dependencies/steam_id.json", "r") as f:
         id = json.load(f)
 
       
@@ -55,7 +60,7 @@ def addMembertoMap(member):
     except:
       id[member.name] = "unknown"
     
-    with open("steam_id.json", "w") as f:
+    with open("dependencies/steam_id.json", "w") as f:
       json.dump(id, f, indent=2)
 
 #Converts Seconds to Minutes and Seconds
@@ -77,10 +82,10 @@ def updateLeaderboard(map, guild):
 
   print(map + ":")
 
-  with open(f"Leaderboards/{map}.json", "r") as f:
+  with open(f"dependencies/Leaderboards/{map}.json", "r") as f:
     lboard = json.load(f)
 
-  with open(f"steam_id.json", "r") as f:
+  with open(f"dependencies/steam_id.json", "r") as f:
     ids = json.load(f)
   
   group = steamlb.LeaderboardGroup(620, name=f"challenge_besttime_{map}")
@@ -90,7 +95,7 @@ def updateLeaderboard(map, guild):
     if guild.get_member_named(member) is not None:
       lboard[member] = updateMember(ids, member, steamLb)
     
-  with open(f"Leaderboards/{map}.json", "w") as f:
+  with open(f"dependencies/Leaderboards/{map}.json", "w") as f:
     json.dump(lboard, f, indent=2) 
     
 #Updates member on leaderboard list
@@ -114,7 +119,7 @@ def updateMember(ids, member, lb):
 #Update all the times
 @tasks.loop(seconds=60)
 async def updateTimes(guild=None, map=None, forced=False):
-  with open("updatetime.json", "r") as f:
+  with open("dependencies/updatetime.json", "r") as f:
     t = json.load(f)
     
   if str(d.now().strftime("%H:%M")) != f"{t['Hour']}:{t['Minute']}" and forced == False:
@@ -124,7 +129,7 @@ async def updateTimes(guild=None, map=None, forced=False):
 
   await client.change_presence(activity=discord.Game(name="Updating Leaderboards │ %help", type=3), status=discord.Status.idle, afk=True)
 
-  with open(f"Leaderboards/.maps.json", "r") as f:
+  with open(f"dependencies/Leaderboards/.maps.json", "r") as f:
     allBoards = json.load(f)
 
   if map == None:        
@@ -196,17 +201,17 @@ async def time(ctx, map=None, name: commands.MemberConverter=None, newTime=None)
   #await ctx.message.delete()
   
   if map == None:
-    with open(f"Leaderboards/.maps.json", "r") as f:
+    with open(f"dependencies/Leaderboards/.maps.json", "r") as f:
       map = json.load(f)["Singleplayer No SLA"]
   try:
-    with open(f"Leaderboards/{map}.json", "r") as f:
+    with open(f"dependencies/Leaderboards/{map}.json", "r") as f:
       leaderboard = json.load(f)
   except:
-    with open("Leaderboards/.maps.json", "r") as f:
+    with open("dependencies/Leaderboards/.maps.json", "r") as f:
       map = json.load(f)[str(map)]
-      leaderboard = json.load(open(f"Leaderboards/{map}.json", "r"))
+      leaderboard = json.load(open(f"dependencies/Leaderboards/{map}.json", "r"))
 
-  with open("Leaderboards/.maps.json", "r") as f:
+  with open("dependencies/Leaderboards/.maps.json", "r") as f:
     j = json.load(f)
 
   key = "Null"
@@ -219,7 +224,7 @@ async def time(ctx, map=None, name: commands.MemberConverter=None, newTime=None)
       print("no")
       return
     leaderboard[str(name.name)] = newTime
-    with open(f"Leaderboards/{map}.json", "w") as f:
+    with open(f"dependencies/Leaderboards/{map}.json", "w") as f:
       json.dump(leaderboard, f, indent=2)   
     title = None 
 
@@ -230,7 +235,7 @@ async def time(ctx, map=None, name: commands.MemberConverter=None, newTime=None)
     lb = []
     for value in leaderboard:
       score = 0
-      with open(f"Leaderboards/{map}.json", "r") as f:
+      with open(f"dependencies/Leaderboards/{map}.json", "r") as f:
         score = json.load(f)[value]
 
       if score != "unknown":
@@ -293,12 +298,12 @@ async def setSteamId(ctx, member: commands.MemberConverter, id):
   if ctx.guild.get_role(773267094770810921) or ctx.guild.get_role(863175123746029630) not in ctx.author.roles and member.name != ctx.author.name:
     return
   
-  with open(f"steam_id.json", "r") as f:
+  with open(f"dependencies/steam_id.json", "r") as f:
     new = json.load(f)
     
   new[member.name] = str(id)
   
-  with open(f"steam_id.json", "w") as f:
+  with open(f"dependencies/steam_id.json", "w") as f:
     json.dump(new, f, indent=2)
     
   await ctx.send(f"Set Steam Id for {member.name}")
@@ -348,7 +353,7 @@ async def stopUpdating(ctx):
 #Spit out a random map
 @client.command(help="Spit out a random map", aliases=["choosemap", "map", "choose"])
 async def chooseMap(ctx, cont=None):
-  with open("Leaderboards/.maps.json", "r") as f:
+  with open("dependencies/Leaderboards/.maps.json", "r") as f:
     maps = json.load(f)
 
   mapList = []

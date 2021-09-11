@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-import storage
+from dependencies import storage
 import itertools
 
 class CustomHelp(commands.DefaultHelpCommand):
