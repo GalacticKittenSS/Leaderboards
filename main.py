@@ -28,8 +28,15 @@ def addMembertoMap(member):
     map = json.load(f)
     
     for value in map:
-      with open(f"Leaderboards/{map[value]}.json", "r") as f:
-        new = json.load(f)
+      try:
+        with open(f"Leaderboards/{map[value]}.json", "r") as f:
+          new = json.load(f)
+      except:
+        with open(f"Leaderboards/{map[value]}.json", "w") as f:
+          json.dump({}, f, indent=2)
+
+        with open(f"Leaderboards/{map[value]}.json", "r") as f:
+          new = json.load(f)
 
       try:
         new[member.name] = new[member.name]
