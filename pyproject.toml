@@ -1,8 +1,8 @@
 [tool.poetry]
-name = "repl_python3_Leaderboards"
-version = "0.1.0"
-description = ""
-authors = ["Your Name <you@example.com>"]
+name = "Leaderboard Bot"
+version = "1.0.2"
+description = "A leaderboard bot for discord. Leaderbot accesses steam leaderboards to auto-update leaderboards for all discord server's"
+authors = ["GalacticKittenSS [@GalacticKitten]"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
