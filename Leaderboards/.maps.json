@@ -1,7 +1,7 @@
 {
   "Portal Inbounds": "inbounds",
   "Portal Inbounds No Sla": "inboundNoSla",
-  "Portal Out of Bounds": "oob",
+  "Portal Out of Bounds": "OOB",
   "Portal Glitchless": "glitchless",
 
 
@@ -15,7 +15,7 @@
   "Cube Momentum": "sp_a1_intro5",
   "Future Starter": "sp_a1_intro6",
   "Secret Panel": "sp_a1_intro7",
-  "Wake Up": "sp_a1_wakeup",
+  "Wakeup": "sp_a1_wakeup",
   "Incinerator": "sp_a2_intro",
 
   "Laser Intro": "sp_a2_laser_intro",
@@ -24,7 +24,7 @@
   "Laser Over Goo": "sp_a2_laser_over_goo",
   "Catapult Intro": "sp_a2_catapult_intro",
   "Trust Fling": "sp_a2_trust_fling",
-  "Pit Fling": "sp_a2_pit_flings",
+  "Pit Flings": "sp_a2_pit_flings",
   "Fizzler Intro": "sp_a2_fizzler_intro",
 
   "Ceiling Catapult ": "sp_a2_sphere_peek",

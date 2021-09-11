@@ -73,27 +73,27 @@ def updateLeaderboard(map, guild):
     lboard = json.load(f)
 
   with open(f"steam_id.json", "r") as f:
-    members = json.load(f)
+    ids = json.load(f)
   
   group = steamlb.LeaderboardGroup(620, name=f"challenge_besttime_{map}")
   steamLb = group.get()
 
-  for member in members:
+  for member in ids:
     if guild.get_member_named(member) is not None:
-      lboard[member] = updateMember(members, member, steamLb)
+      lboard[member] = updateMember(ids, member, steamLb)
     
   with open(f"Leaderboards/{map}.json", "w") as f:
     json.dump(lboard, f, indent=2) 
 
-#Add member to leaderboard list
-def updateMember(members, member, lb):
-  if members[member] == "unknown":
+#Updates member on leaderboard list
+def updateMember(ids, member, lb):
+  if ids[member] == "unknown":
       return "unknown"
 
   print(member)
     
   try:
-    entry = lb.find_entry(steam_id=int(members[member]))
+    entry = lb.find_entry(steam_id=int(ids[member]))
     score = entry.score.text
         
     secs, ms = score[:len(score) - 2], score[len(score) - 2:]
@@ -105,10 +105,7 @@ def updateMember(members, member, lb):
 
 #Update all the times
 @tasks.loop(seconds=60)
-async def updateTimes(guild=None, map=None, ctx=None, forced=False):
-  print("Loop")
-
-
+async def updateTimes(guild=None, map=None, forced=False):
   with open("updatetime.json", "r") as f:
     t = json.load(f)
     
@@ -117,7 +114,6 @@ async def updateTimes(guild=None, map=None, ctx=None, forced=False):
   
   print(f"Updating Times ------ {d.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
-  
   await client.change_presence(activity=discord.Game(name="Updating Leaderboards │ %help", type=3), status=discord.Status.idle, afk=True)
 
   with open(f"Leaderboards/.maps.json", "r") as f:
@@ -233,25 +229,37 @@ async def time(ctx, map=None, name: commands.MemberConverter=None, newTime=None)
         try:
           minute = int(score.split(":")[0])
           second = int(score.split(":")[1].split(".")[0])
-          ms = int(score.split(":")[1].split(".")[1]) 
+          try:
+           ms = score.split(":")[1].split(".")[1]
+          except:
+            ms = 0
         except:
           minute = 0
           second = int(score.split(".")[0])
-          ms = int(score.split(".")[1])
+          ms = score.split(".")[1]
           
-        score = f"{minute * 60 + second}.{ms}"
+        if ms == 0:
+          score = f"{minute *60 + second}"
+        else:
+         score = f"{minute * 60 + second}.{ms}"
         if float(score) < 100:
           score = f"0{score}"
         lb.append(f"{score},{value}")
 
     lb.sort()
     new = "None"
+    place = 1
     for score in lb:
-      value = f"{score.split(',')[1]}: {secs_to_min(int(score.split(',')[0].split('.')[0]))}.{score.split(',')[0].split('.')[1]}"
+      try:
+       value = f"#{place} - {score.split(',')[1]} : {secs_to_min(int(score.split(',')[0].split('.')[0]))}.{score.split(',')[0].split('.')[1]}"
+      except:
+        value = f"#{place} - {score.split(',')[1]} : {secs_to_min(int(score.split(',')[0].split('.')[0]))}"
       if new != "None":
         new = f"{new}\n{value}"
       else:
         new = f"{value}"
+        
+      place = place + 1
     
     title = f"Leaderboards for {map_name}"
 
@@ -274,7 +282,7 @@ async def setSteamId(ctx, member: commands.MemberConverter, id):
   
   #await ctx.message.delete()
   
-  if ctx.guild.get_role(862797610247127080) or ctx.guild.get_role(863175123746029630) not in member.roles and member.name != ctx.author.name:
+  if ctx.guild.get_role(773267094770810921) or ctx.guild.get_role(863175123746029630) not in ctx.author.roles and member.name != ctx.author.name:
     return
   
   with open(f"steam_id.json", "r") as f:
@@ -309,7 +317,7 @@ async def reCheck(ctx):
 async def updateScores(ctx, map=None):
   #await ctx.message.delete()
   message = await ctx.send("Updating Leaderboard. This will temporarily stop all bot function")
-  await updateTimes(map, ctx.guild, True)
+  await updateTimes(map=map, guild=ctx.guild, forced=True)
   await message.delete()
   await ctx.send("Leaderboard has been updated!")
 
