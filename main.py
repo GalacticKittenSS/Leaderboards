@@ -8,7 +8,7 @@ import help
 import storage
 import discord
 from discord.ext import commands, tasks
-
+ 
 #SetUp
 activity = discord.Game(name="%chooseMap, What should we play today? %help", type=3)
 
