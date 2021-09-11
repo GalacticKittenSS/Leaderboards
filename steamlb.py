@@ -40,12 +40,10 @@ class Leaderboard:
             self.entry_number = protoleaderboard.entries
             self.sort_method = protoleaderboard.sort_method
             self.app_id = protoleaderboard.app_id
-
-            self.all_entries = []
+            
             xml = requests.get(self.url)
             _bs = BeautifulSoup(xml.content, features="lxml")
-            for entry in _bs.entries:
-              self.all_entries.append(entry)
+            self.all_entries = _bs.entries
 
     def __repr__(self):
       pass
@@ -55,7 +53,7 @@ class Leaderboard:
             raise ValueError("You can only find an entry by 1 parameter.")
         if steam_id is not None:
             if not isinstance(steam_id, int):
-                raise ValueError("steam_id must be a int")
+                raise ValueError("Steam id must be a int")
             for entry in self.all_entries:
               if int(entry.steamid.text) == steam_id:
                   return entry
@@ -63,7 +61,7 @@ class Leaderboard:
                 return None
         elif rank is not None:
             if not isinstance(rank, int):
-                raise ValueError("steam_id must be an int")
+                raise ValueError("Rank must be an int")
             try:
                 return self.all_entries[rank - 1]
             except IndexError:

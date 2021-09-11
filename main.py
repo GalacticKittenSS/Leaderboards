@@ -8,7 +8,7 @@ import help
 import storage
 import discord
 from discord.ext import commands, tasks
-
+ 
 #SetUp
 activity = discord.Game(name="%chooseMap, What should we play today? %help", type=3)
 
@@ -229,13 +229,19 @@ async def time(ctx, map=None, name: commands.MemberConverter=None, newTime=None)
         try:
           minute = int(score.split(":")[0])
           second = int(score.split(":")[1].split(".")[0])
-          ms = score.split(":")[1].split(".")[1]
+          try:
+           ms = score.split(":")[1].split(".")[1]
+          except:
+            ms = 0
         except:
           minute = 0
           second = int(score.split(".")[0])
           ms = score.split(".")[1]
           
-        score = f"{minute * 60 + second}.{ms}"
+        if ms == 0:
+          score = f"{minute *60 + second}"
+        else:
+         score = f"{minute * 60 + second}.{ms}"
         if float(score) < 100:
           score = f"0{score}"
         lb.append(f"{score},{value}")
@@ -244,7 +250,10 @@ async def time(ctx, map=None, name: commands.MemberConverter=None, newTime=None)
     new = "None"
     place = 1
     for score in lb:
-      value = f"#{place} - {score.split(',')[1]}: {secs_to_min(int(score.split(',')[0].split('.')[0]))}.{score.split(',')[0].split('.')[1]}"
+      try:
+       value = f"#{place} - {score.split(',')[1]} : {secs_to_min(int(score.split(',')[0].split('.')[0]))}.{score.split(',')[0].split('.')[1]}"
+      except:
+        value = f"#{place} - {score.split(',')[1]} : {secs_to_min(int(score.split(',')[0].split('.')[0]))}"
       if new != "None":
         new = f"{new}\n{value}"
       else:
@@ -273,7 +282,7 @@ async def setSteamId(ctx, member: commands.MemberConverter, id):
   
   #await ctx.message.delete()
   
-  if ctx.guild.get_role(862797610247127080) or ctx.guild.get_role(863175123746029630) not in member.roles and member.name != ctx.author.name:
+  if ctx.guild.get_role(773267094770810921) or ctx.guild.get_role(863175123746029630) not in ctx.author.roles and member.name != ctx.author.name:
     return
   
   with open(f"steam_id.json", "r") as f:
