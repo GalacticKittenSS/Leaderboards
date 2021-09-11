@@ -1,5 +1,5 @@
-/[Ll]eaderboards/
-/__pycache__/
-/pb_list.json
-/steam_id.json
+/dependencies/[Ll]eaderboards/
+/dependencies/__pycache__/
+/dependencies/pb_list.json
+/dependencies/steam_id.json
 /.breakpoints
