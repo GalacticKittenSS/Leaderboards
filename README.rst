@@ -83,12 +83,12 @@ You can set your id by entering `%setSteamId` follow by `@self` and your id.
 * For example: `%setSteamId @GalacticKittenSS#4954  12345678912345678`
 
 
-Where do i find my steam account id?
+* Where do i find my steam account id?
 
 You can find your id by heading to https://store.steampowered.com/account/ and logging in. You should find your id under `steam name` Account.
 
 
-When does leaderboard bot update?
+* When does leaderboard bot update?
 
 Leaderboard bot updates every 24 hours at 6am GMT
 
