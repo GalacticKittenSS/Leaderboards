@@ -3,7 +3,7 @@ LEADERBOARD BOT
 Leaderboard bot allows you to access leaderboard data from steam and create a more competition in your discord servers. Currently Only for Portal 2
 
 Using discord.py
-==========
+-----------
 .. image:: https://img.shields.io/pypi/v/discord.py.svg
    :target: https://pypi.python.org/pypi/discord.py
    :alt: PyPI version info
