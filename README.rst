@@ -42,7 +42,7 @@ Installation
 .. image:: https://www.vectorlogo.zone/logos/replit/replit-ar21.svg
    :target: https://replit.com
    :alt: Replit
-.. image:: https://raw.githubusercontent.com/hail2u/drawic/main/uptimerobot.svg
+.. image:: https://www.dropbox.com/s/fi53gqw9cndzgz2/UptimeRobot-vector-logo.svg?dl=0
    :target: https://uptimerobot.com
    :alt: Up Time Robot
    
