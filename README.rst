@@ -46,6 +46,8 @@ Installation
 
 2. Select Sever you wish to add it to.
 
+3. Enter the token (https://pastebin.com/eFZQcVUa) into the secrets tab under the name: "DISCORD"
+
 Setup
 -----------
 * Open Storage.py
