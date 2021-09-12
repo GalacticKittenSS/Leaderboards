@@ -73,24 +73,23 @@ QnA
 
 * How do I use Leaderboard bot?
 
-In order to access the commands just type in chat using an % and the name of the command. You must first enter your steam account id in order for the bot to update your scores. You can also use %help to bring up a list of commands
+	* In order to access the commands just type in chat using an % and the name of the command. You must first enter your steam account id in order for the bot to update your scores. You can also use %help to bring up a list of commands
 
 
 * How do I set my Steam Account Id?
 
-You can set your id by entering `%setSteamId` follow by `@self` and your id.
-
-* For example: `%setSteamId @GalacticKittenSS#4954  12345678912345678`
+	* You can set your id by entering `%setSteamId` follow by `@self` and your id.
+	* For example: `%setSteamId @GalacticKittenSS#4954  12345678912345678`
 
 
 * Where do i find my steam account id?
 
-You can find your id by heading to https://store.steampowered.com/account/ and logging in. You should find your id under `steam name` Account.
+	* You can find your id by heading to https://store.steampowered.com/account/ and logging in. You should find your id under `steam name` Account.
 
 
 * When does leaderboard bot update?
 
-Leaderboard bot updates every 24 hours at 6am GMT
+	* Leaderboard bot updates every 24 hours at 6am GMT
 
 
 Commands
