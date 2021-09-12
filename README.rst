@@ -58,17 +58,17 @@ QnA
 -----------
 * What is Leaderboard bot?
 
-Leaderboard bot is a discord bot that accesses the steam leaderboards to gather leaderboard data among discord server's.
+	* Leaderboard bot is a discord bot that accesses the steam leaderboards to gather leaderboard data among discord server's.
 
 
 * What does Leaderboard bot do?
 
-Leaderboard bot will give you up to date (up to 24 hours) information about specific Portal 2 leaderboard data in the discord server.
+	* Leaderboard bot will give you up to date (up to 24 hours) information about specific Portal 2 leaderboard data in the discord server.
 
 
 * How does it do it?
 
-By associating a discord user to a steam id, Leaderboard bot is able to access data from steam leaderboards and update its own data base. 
+	* By associating a discord user to a steam id, Leaderboard bot is able to access data from steam leaderboards and update its own data base. 
 
 
 * How do I use Leaderboard bot?
