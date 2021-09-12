@@ -74,5 +74,5 @@ Commands
 - stopUpdating:
 	Stops the loop to have the bot update
 - reCheck:
-	Checks through everyone on the server and adds them to a list# Leaderboards
+	Checks through everyone on the server and adds them to a list
 	
