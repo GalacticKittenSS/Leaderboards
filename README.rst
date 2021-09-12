@@ -13,30 +13,6 @@ Using discord.py
    
 A modern, easy to use, feature-rich, and async ready API wrapper for Discord written in Python.
 
-
-Commands
------------
-`%` prefix
-
-- time: 
-	Allows you to set and view 
-	%time {map name/code} {discord  user (optional)} {set new time (optional)}`
-- setSteamId:
-	Associates a steam id to discord user. This allows the bot to update the users leaderboard score
-	`%setSteamId {discord user/mention} {steam id}`
-- choosemap:
-	randomly selects a map
-	`%choosemap {singleplayer/native/category e.c.t}`
-- update:
-	Forces the bot to update all the leaderboard scores from the steam leaderboards
-	`%update {map name/code (optional)}`
-- startUpdating:
-	Starts a loop to have the update all scores
-- stopUpdating:
-	Stops the loop to have the bot update
-- reCheck:
-	Checks through everyone on the server and adds them to a list# Leaderboards
-	
 Installation
 -----------
 **REPLIT**
@@ -64,5 +40,33 @@ Installation
 * Monitering Interval: <20 minutes
 4. Create New Monitor
 
-**Finally**
-Run Repl
+Setup
+-----------
+* Open Storage.py
+* Enter all the needed variables
+* Run the script
+
+
+Commands
+-----------
+`%` prefix
+
+- time: 
+	Allows you to set and view 
+	%time {map name/code} {discord  user (optional)} {set new time (optional)}`
+- setSteamId:
+	Associates a steam id to discord user. This allows the bot to update the users leaderboard score
+	`%setSteamId {discord user/mention} {steam id}`
+- choosemap:
+	randomly selects a map
+	`%choosemap {singleplayer/native/category e.c.t}`
+- update:
+	Forces the bot to update all the leaderboard scores from the steam leaderboards
+	`%update {map name/code (optional)}`
+- startUpdating:
+	Starts a loop to have the update all scores
+- stopUpdating:
+	Stops the loop to have the bot update
+- reCheck:
+	Checks through everyone on the server and adds them to a list# Leaderboards
+	
