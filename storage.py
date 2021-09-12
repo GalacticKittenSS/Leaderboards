@@ -23,6 +23,7 @@ current_sorted_commands = []
 #holds bot client
 client = ""
 
-#Bot Token (Change If you wish to use your own bot)
-botStr = os.getenv("DISCORD")
-#botstr = "{key}"
+#Bot Token 
+#Change If you wish to use your own bot
+#Remove # to use
+#botstr = "ODcwMzU5MDk1MjE4MTU1NjEw.YQLnEg.kQrNIoJuVsDiO7pv6JAsUMBU8y0"
