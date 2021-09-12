@@ -56,6 +56,7 @@ Installation
 2. On https://uptimerobot.com, Sign Up/Log In and go to dashboard. 
 
 3. Add new monitor:
+
 * Monitor type: HTTP(S). 
 
 * Url (or ip): replit url
