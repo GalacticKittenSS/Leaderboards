@@ -54,6 +54,30 @@ Setup
 * Enter all the empty variables
 * Run the script
 
+QnA
+-----------
+What is Leaderboard bot?
+> Leaderboard bot is a discord bot that accesses the steam leaderboards to gather leaderboard data among discord server's.
+
+What does Leaderboard bot do?
+> Leaderboard bot will give you up to date (up to 24 hours) information about specific Portal 2 leaderboard data in the discord server.
+
+How does it do it?
+> By associating a discord user to a steam id, Leaderboard bot is able to access data from steam leaderboards and update its own data base. 
+
+How do I use Leaderboard bot?
+> In order to access the commands just type in chat using an % and the name of the command. You must first enter your steam account id in order for the bot to update your scores. You can also use %help to bring up a list of commands
+
+How do I set my Steam Account Id?
+> You can set your id by entering `%setSteamId` follow by `@self` and your id.
+> For example: `%setSteamId @GalacticKittenSS#4954  12345678912345678`
+
+Where do i find my steam account id?
+> You can find your id by heading to https://store.steampowered.com/account/ and logging in. You should find your id under `steam name` Account.
+
+When does leaderboard bot update?
+> Leaderboard bot updates every 24 hours at 6am GMT
+
 
 Commands
 -----------
