@@ -1,3 +1,5 @@
+import os
+
 #PLEASE ENTER
 modRole = ''
 secondRole = ''
@@ -22,4 +24,5 @@ current_sorted_commands = []
 client = ""
 
 #Bot Token (Change If you wish to use your own bot)
-botStr = "ODYyNjA4NTgxMTE5MTgwODEx.YOa02A.w7EapJJSfKAWgT4lWgsvoSG6Zw4"
+botStr = os.getenv("DISCORD")
+#botstr = "{key}"
