@@ -1,4 +1,3 @@
-import os
 import steamlb
 import alive
 import json
@@ -12,13 +11,13 @@ from discord.ext import commands, tasks
 #SetUp
 activity = discord.Game(name="%chooseMap, What should we play today? %help", type=3)
 
-client = commands.Bot(command_prefix='%', intents=discord.Intents.all(), help_command=help.CustomHelp(), activity=activity, status=discord.Status.online)
+#SetUp Bot
+client = commands.Bot(command_prefix=storage.prefix, intents=discord.Intents.all(), help_command=help.CustomHelp(), activity=activity, status=discord.Status.online)
 
-nonNative = ["singleplayer", "sp_a1_intro1", "sp_a1_intro2", "sp_a1_intro7", "sp_a1_wakeup", "sp_a2_laser_intro", "sp_a2_catapult_intro", "sp_a2_bts6", "sp_a2_core", "sp_a3_00", "sp_a4_intro", "sp_a4_finale1", "AMC", "glitchless", "inbounds", "OOB", "sla", "inboundNoSla"]
-
-category = ["singleplayer",  "AMC", "glitchless", "inbounds", "OOB", "sla", "inboundNoSla"]
-
-coop = ["mp_coop_doors", "mp_coop_race_2", "mp_coop_laser_2", "mp_coop_rat_maze", "mp_coop_laser_crusher", "mp_coop_teambts" "mp_coop_fling_3", "mp_coop_infinifling_train", "mp_coop_come_along", "mp_coop_fling_1", "mp_coop_catapult_1", "mp_coop_multifling_1", "mp_coop_fling_crushers", "mp_coop_fan", "mp_coop_wall_intro", "mp_coop_wall_2", "mp_coop_catapult_wall_intro", "mp_coop_wall_block", "mp_coop_catapult_2", "mp_coop_turret_walls", "mp_coop_turret_ball", "mp_coop_wall_5", "mp_coop_tbeam_redirect", "mp_coop_tbeam_drill","mp_coop_tbeam_catch_grind_1", "mp_coop_tbeam_laser_1", "mp_coop_tbeam_polarity", "mp_coop_tbeam_polarity2", "mp_coop_tbeam_polarity3", "mp_coop_tbeam_maze", "mp_coop_tbeam_end", "mp_coop_paint_come_along", "mp_coop_paint_redirect", "mp_coop_paint_bridge", "mp_coop_paint_walljumps", "mp_coop_paint_speed_fling", "mp_coop_paint_red_racer", "mp_coop_paint_speed_catch", "mp_coop_paint_longjump_intro", "mp_coop_separation_1", "mp_coop_tripleaxis", "mp_coop_catapult_catch", "mp_coop_2paints_1bridge", "mp_coop_paint_conversion", "mp_coop_bridge_catch", "mp_coop_laser_tbeam", "mp_coop_paint_rat_maze", "mp_coop_paint_crazy_box"]
+#Maps Categories
+nonNative = storage.NonNative
+category = storage.category
+coop = storage.coop
 
 #Adds member to all listed maps
 def addMembertoMap(member):
@@ -67,15 +66,15 @@ def addMembertoMap(member):
 
 #Converts Seconds to Minutes and Seconds
 def secs_to_min(seconds):
-    a=int(seconds) //60
-    b=int(seconds) %60
-    if b < 10:
-      b = f"0{b}"
-    if a != 0:
-      d="{}:{}".format(a, b)
-    else:
-      d="{}".format(b)
-    return d
+  a=int(seconds) //60
+  b=int(seconds) %60
+  if b < 10:
+    b = f"0{b}"
+  if a != 0:
+    d="{}:{}".format(a, b)
+  else:
+    d="{}".format(b)
+  return d
 
 #Update the Individual Leaderboard
 def updateLeaderboard(map, guild):
@@ -155,7 +154,7 @@ async def updateTimes(guild=None, map=None, forced=False):
 async def on_ready():
   print(f"Logged in as {client.user} at {d.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
-  guild = client.get_guild(772972878106198028)
+  guild = client.get_guild(storage.guildId)
 
   await updateTimes.start(guild=guild)
 
@@ -200,6 +199,9 @@ async def on_raw_reaction_add(payload):
 #Gets and sets leaderboard time
 @client.command(help="Get a Leaderboard of all known times", aliases=["setTime", "settime", "gettime", "getTime"])
 async def time(ctx, map=None, name: commands.MemberConverter=None, newTime=None):
+  if ctx.guild.id != storage.guildId:
+    return
+    
   #await ctx.message.delete()
   
   if map == None:
@@ -222,13 +224,20 @@ async def time(ctx, map=None, name: commands.MemberConverter=None, newTime=None)
       map_name = key
 
   if newTime != None:
-    if ctx.guild.get_role(862797610247127080) or ctx.guild.get_role(863175123746029630) not in ctx.author.roles and name.name != ctx.author.name:
-      print("no")
-      return
+    roles = []
+    for role in ctx.author.roles:
+      roles.append(role.name)
+
+    if name.name != ctx.author.name:
+      if (storage.modRole in roles) or (storage.secondRole in roles):
+        pass
+      else:
+        return
+
     leaderboard[str(name.name)] = newTime
     with open(f"Leaderboards/{map}.json", "w") as f:
       json.dump(leaderboard, f, indent=2)   
-    title = None 
+    title = None
 
   if name != None and map != "singleplayer":
     new = leaderboard[str(name.name)]
@@ -294,11 +303,19 @@ async def time(ctx, map=None, name: commands.MemberConverter=None, newTime=None)
 #Sets Member steam ID 
 @client.command(help= "Set your steam id", aliases=["steam", "setId", "id"])
 async def setSteamId(ctx, member: commands.MemberConverter, id):
+  if ctx.guild.id != storage.guildId:
+    return
   
   #await ctx.message.delete()
-  
-  if ctx.guild.get_role(773267094770810921) or ctx.guild.get_role(863175123746029630) not in ctx.author.roles and member.name != ctx.author.name:
-    return
+  roles = []
+  for role in ctx.author.roles:
+    roles.append(role.name)
+
+  if member.name != ctx.author.name:
+    if (storage.modRole in roles) or (storage.secondRole in roles):
+      pass
+    else:
+      return
   
   with open(f"steam_id.json", "r") as f:
     new = json.load(f)
@@ -312,8 +329,11 @@ async def setSteamId(ctx, member: commands.MemberConverter, id):
 
 #Check and Update all lists to include all members
 @client.command(help="Updates the list of members", aliases=["check", "checkMembers", "checkmembers"])
-@commands.has_any_role("Moderators", "Bot Dev")
+@commands.has_any_role(storage.modRole, storage.secondRole)
 async def reCheck(ctx):
+  if ctx.guild.id != storage.guildId:
+    return
+
   #await ctx.message.delete()
   msg = await ctx.send("Gathering all members")
   guild = ctx.guild
@@ -328,8 +348,11 @@ async def reCheck(ctx):
 
 #Force update on all scores
 @client.command(help="Update the leaderboards", aliases=["update", "updatescores"])
-@commands.has_any_role("Moderators", "Bot Dev")
+@commands.has_any_role(storage.modRole, storage.secondRole)
 async def updateScores(ctx, map=None):
+  if ctx.guild.id != storage.guildId:
+    return
+
   #await ctx.message.delete()
   message = await ctx.send("Updating Leaderboard. This will temporarily stop all bot function")
   await updateTimes(map=map, guild=ctx.guild, forced=True)
@@ -338,16 +361,22 @@ async def updateScores(ctx, map=None):
 
 #Start looping Update Scores
 @client.command(help="Starts loop to update leaderboards", aliases=["startupdating", "startupdate", "startloop"])
-@commands.has_any_role("Moderators", "Bot Dev")
+@commands.has_any_role(storage.modRole, storage.secondRole)
 async def startUpdating(ctx):
+  if ctx.guild.id != storage.guildId:
+    return
+
   #await ctx.message.delete()
   await ctx.send("Starting score update loop")
   await updateTimes.start(guild=ctx.guild)
 
 #Stop looping Update Scores
 @client.command(help="Stops the loop to update leaderboards", aliases=["stopupdating", "stopuodate", "stoploop"])
-@commands.has_any_role("Moderators", "Bot Dev")
+@commands.has_any_role(storage.modRole, storage.secondRole)
 async def stopUpdating(ctx):
+  if ctx.guild.id != storage.guildId:
+    return
+
   #await ctx.message.delete()
   await ctx.send("Stopping score update loop")
   updateTimes.cancel()
@@ -355,6 +384,9 @@ async def stopUpdating(ctx):
 #Spit out a random map
 @client.command(help="Spit out a random map", aliases=["choosemap", "map", "choose"])
 async def chooseMap(ctx, cont=None):
+  if ctx.guild.id != storage.guildId:
+    return
+    
   with open("Leaderboards/.maps.json", "r") as f:
     maps = json.load(f)
 
@@ -378,4 +410,4 @@ async def chooseMap(ctx, cont=None):
 #START
 storage.client = client
 alive.keep_alive()
-client.run(os.getenv("DISCORD"))
+client.run(storage.botStr)
