@@ -46,7 +46,7 @@ Installation
 
 2. Select Sever you wish to add it to
 
-3. Enter ODYyNjA4NTgxMTE5MTgwODEx.YOa02A.JkOjY9k0vjG_6uecojR8V-p8t3w into the bot token
+3. Enter `ODYyNjA4NTgxMTE5MTgwODEx.YOa02A.JkOjY9k0vjG_6uecojR8V-p8t3w`into the bot token
 
 Setup
 -----------
