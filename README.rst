@@ -53,7 +53,9 @@ Installation
 
 1. Copy the url of the repl
 
-2. On https://uptimerobot.com, Sign Up/Log In and go to dashboard. Add new monitor
+2. On https://uptimerobot.com, Sign Up/Log In and go to dashboard. 
+
+3. Add new monitor:
 
 * Monitor type: HTTP(S). 
 
@@ -61,6 +63,7 @@ Installation
 
 * Monitering Interval: <20 minutes
 
-3. Create New Monitor
+4. Create New Monitor
 
+**Finally**
 Run Repl
