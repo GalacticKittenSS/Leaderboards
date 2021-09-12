@@ -43,9 +43,9 @@ On https://replit.com, click the plus arrow. Hit import from github. Enter `gith
 
 Copy the url of the repl.
 On https://uptimerobot.com, Sign Up/Log In and go to dashboard. Add new monitor. 
-	Monitor type: `HTTP(S)`. 
-	Url (or ip): `replit url`
-	Monitering Interval: `<20 minutes`
+* Monitor type: `HTTP(S)`. 
+* Url (or ip): `replit url`
+* Monitering Interval: `<20 minutes`
 Create New Monitor.
 
 Run Repl
