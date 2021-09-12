@@ -14,7 +14,7 @@ Using discord.py
 A modern, easy to use, feature-rich, and async ready API wrapper for Discord written in Python.
 
 
-Commands:
+Commands
 -----------
 `%` prefix
 
@@ -36,3 +36,9 @@ Commands:
 	Stops the loop to have the bot update
 - reCheck:
 	Checks through everyone on the server and adds them to a list# Leaderboards
+	
+Installation
+-----------
+.. image:: https://th.bing.com/th/id/OIP.uKyDYcIf2BZotcsLsOdzQwHaHa?w=152&h=180&c=7&r=0&o=5&dpr=1.5&pid=1.7
+   :target: https://replit.com
+   :alt: Replit
