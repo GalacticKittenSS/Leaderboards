@@ -44,9 +44,7 @@ Installation
 
 1. Head to https://discord.com/api/oauth2/authorize?client_id=862608581119180811&permissions=75840&scope=bot
 
-2. Select Sever you wish to add it to
-
-3. Enter ODYyNjA4NTgxMTE5MTgwODEx.YOa02A.F9pCkFGJduteIIeQnG5ph3r9jQcinto the bot token
+2. Select Sever you wish to add it to.
 
 Setup
 -----------
