@@ -5,6 +5,11 @@ guildId =
 prefix = "%"
 
 #IGNORE
+
+#Bot Token 
+#Change If you wish to use your own bot
+botstr = "{token}"
+
 #Maps names sorted into categories
 NonNative = ["singleplayer", "sp_a1_intro1", "sp_a1_intro2", "sp_a1_intro7", "sp_a1_wakeup", "sp_a2_laser_intro", "sp_a2_catapult_intro", "sp_a2_bts6", "sp_a2_core", "sp_a3_00", "sp_a4_intro", "sp_a4_finale1", "AMC", "glitchless", "inbounds", "OOB", "sla", "inboundNoSla"]
 
@@ -20,6 +25,3 @@ current_sorted_commands = []
 
 #holds bot client
 client = ""
-
-#Bot Token (Change If you wish to use your own bot)
-botStr = "ODYyNjA4NTgxMTE5MTgwODEx.YOa02A.w7EapJJSfKAWgT4lWgsvoSG6Zw4"
