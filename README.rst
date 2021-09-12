@@ -14,7 +14,8 @@ Using discord.py
 A modern, easy to use, feature-rich, and async ready API wrapper for Discord written in Python.
 
 
-**Bot Commands:**
+Commands:
+-----------
 `%` prefix
 
 - time: 
