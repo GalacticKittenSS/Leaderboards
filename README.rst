@@ -40,10 +40,16 @@ Installation
 * Monitering Interval: <20 minutes
 4. Create New Monitor
 
+**DISCORD BOT**
+
+1. Head to https://discord.com/api/oauth2/authorize?client_id=862608581119180811&permissions=75840&scope=bot
+
+2. Select Sever you wish to add it to
+
 Setup
 -----------
 * Open Storage.py
-* Enter all the needed variables
+* Enter all the empty variables
 * Run the script
 
 
