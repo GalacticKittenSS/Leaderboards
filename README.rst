@@ -39,13 +39,18 @@ Commands
 	
 Installation
 -----------
-On https://replit.com, click the plus arrow. Hit import from github. Enter `github.com/GalacticKittenSS/Leaderboards`. Click import from github.
+**REPLIT**
+1. On https://replit.com, click the plus arrow. 
+2. Hit import from github. 
+3. Enter `github.com/GalacticKittenSS/Leaderboards`. 
+4. Click import from github.
 
-Copy the url of the repl
-On https://uptimerobot.com, Sign Up/Log In and go to dashboard. Add new monitor
+**UP TIME ROBOT**
+1. Copy the url of the repl
+2. On https://uptimerobot.com, Sign Up/Log In and go to dashboard. Add new monitor
 * Monitor type: HTTP(S). 
 * Url (or ip): replit url
 * Monitering Interval: <20 minutes
-Create New Monitor
+3. Create New Monitor
 
 Run Repl
