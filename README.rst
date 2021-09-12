@@ -42,3 +42,18 @@ Installation
 .. image:: https://www.vectorlogo.zone/logos/replit/replit-ar21.svg
    :target: https://replit.com
    :alt: Replit
+.. image:: https://raw.githubusercontent.com/hail2u/drawic/main/uptimerobot.svg
+   :target: https://uptimerobot.com
+   :alt: Up Time Robot
+   
+On https://replit.com, click the plus arrow. Hit import from github. Enter `github.com/GalacticKittenSS/Leaderboards`. Click import from github.
+
+
+Copy the url of the repl.
+On https://uptimerobot.com, Sign Up/Log In and go to dashboard. Add new monitor. 
+	Monitor type: `HTTP(S)`. 
+	Url (or ip): `replit url`
+	Monitering Interval: `<20 minutes`
+Create New Monitor.
+
+Run Repl
