@@ -39,15 +39,7 @@ Commands
 	
 Installation
 -----------
-.. image:: https://www.vectorlogo.zone/logos/replit/replit-ar21.svg
-   :target: https://replit.com
-   :alt: Replit
-.. image:: https://www.dropbox.com/s/fi53gqw9cndzgz2/UptimeRobot-vector-logo.svg?dl=0
-   :target: https://uptimerobot.com
-   :alt: Up Time Robot
-   
 On https://replit.com, click the plus arrow. Hit import from github. Enter `github.com/GalacticKittenSS/Leaderboards`. Click import from github.
-
 
 Copy the url of the repl.
 On https://uptimerobot.com, Sign Up/Log In and go to dashboard. Add new monitor. 
