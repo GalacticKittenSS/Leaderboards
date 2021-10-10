@@ -40,20 +40,20 @@ class LeaderboardGroup():
       self.data.append(f"{score},{name}")
 
   def createFromFile(self, filename):
-    file =  self.loadFile(filename)
+    file = self.loadFile(filename)
 
     for name in file:
-      score = file[name]
+      score = file[name]["time"]
       for data in self.data:
         if name in data:
-          self.data[self.data.index(data)] = f"{score},{name}"
+          self.data[self.data.index(data)] = f"{score},{file[name]['nickname']}"
           return
-      self.data.append(f"{score},{name}")
+      self.data.append(f"{score},{file[name]['nickname']}")
     
   def getResult(self):
     self.data.sort()
     place = 1
-    result = "NULL"  
+    result = "NULL"
     
     for key in self.data:
       score, name = key.split(",")
