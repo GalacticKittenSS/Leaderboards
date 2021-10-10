@@ -148,7 +148,6 @@ async def setSteamId(ctx, id, member: commands.MemberConverter=None):
   if member == None:
     member = ctx.author
   elif member != ctx.author:
-    print("Hello")
     roles = []
     for role in ctx.author.roles:
       roles.append(role.name)
