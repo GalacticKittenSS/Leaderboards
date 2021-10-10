@@ -15,38 +15,12 @@ A modern, easy to use, feature-rich, and async ready API wrapper for Discord wri
 
 Installation
 -----------
-**REPLIT**
-
-1. On https://replit.com, click the plus arrow. 
-
-2. Hit import from github. 
-
-3. Enter `github.com/GalacticKittenSS/Leaderboards`. 
-
-4. Click import from github.
-
-**UP TIME ROBOT**
-
-1. Copy the url of the repl
-
-2. On https://uptimerobot.com, Sign Up/Log In and go to dashboard. 
-
-3. Add new monitor:
-
-* Monitor type: HTTP(S). 
-
-* Url (or ip): replit url
-
-* Monitering Interval: <20 minutes
-4. Create New Monitor
 
 **DISCORD BOT**
 
 1. Head to https://discord.com/api/oauth2/authorize?client_id=862608581119180811&permissions=75840&scope=bot
 
 2. Select Sever you wish to add it to.
-
-3. Enter the token (https://pastebin.com/2jcs8GN3) into the secrets tab under the name: "DISCORD"
 
 Setup
 -----------
