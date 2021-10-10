@@ -33,7 +33,7 @@ async def on_raw_reaction_add(payload):
 
 #COMMANDS
 #Gets and sets leaderboard time
-@client.command(help="Returns a Leaderboard of all known times", aliases=["getTime", "gettime", "Time", "time"])
+@client.command(help="Returns a Leaderboard of all known times", aliases=["getTime", "gettime", "Time", "time", "lb"])
 async def leaderboard(ctx, map=None, user:commands.MemberConverter=None):
   tic = time.perf_counter()
   
@@ -75,6 +75,9 @@ async def leaderboard(ctx, map=None, user:commands.MemberConverter=None):
       lb.createFromSteam("steam_id.json", f"challenge_besttime_{listOfMaps[map]}")
       url = lb.getUrl().split('/')[6]
     result = lb.getResult()
+
+  if result == "NULL":
+    result = "Could Not Find Result"
 
   if url == None:
     embed = discord.Embed(title=f"{map}", description=result, colour=discord.Colour(0x8d78b9))
