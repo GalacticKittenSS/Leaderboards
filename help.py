@@ -107,3 +107,33 @@ def get_command_signature(command):
 		alias = command.name if not parent_sig else parent_sig + ' ' + command.name
 
 	return '%s%s %s' % ("%", alias, command.signature)
+
+async def reaction(client, payload):
+  count = -1
+  for value in storage.current_help_message:
+    channel = client.get_channel(value.channel.id) 
+    count = count + 1
+    async for message in channel.history(limit=200):
+      if message == storage.current_help_message[count] and payload.user_id != 862608581119180811 and message.id== payload.message_id:
+        index = storage.current_help_index[count]
+
+        if payload.emoji.name == "⏭️":
+          index = index + 1
+          await message.remove_reaction("⏭️", client.get_user(payload.user_id))
+        if payload.emoji.name == "⏮️":
+          index = index - 1
+          await message.remove_reaction("⏮️", client.get_user(payload.user_id))
+
+        if index == len(storage.current_help_commands) and len(storage.current_help_commands) > 0:
+          index = -len(storage.current_help_commands)
+        elif index == -len(storage.current_help_commands) and len(storage.current_help_commands) > 0:
+          index = len(storage.current_help_commands)
+        
+        storage.current_help_index[count]= index
+        print(index)
+        if index + 1 == len(storage.current_help_commands) or index == -1:
+          cmd = storage.current_help_commands[index - 1]
+          await help.CustomHelp().send_next_help(command=cmd, channel=channel, message= message, page=True)
+        else:
+          cmd = storage.current_help_commands[index]
+          await help.CustomHelp().send_next_help(command=cmd, channel=channel, message= message)
