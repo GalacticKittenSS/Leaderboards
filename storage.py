@@ -3,15 +3,14 @@ import os
 #PLEASE ENTER
 modRole = ''
 secondRole = ''
-guildId = 
 prefix = "%"
 
 #IGNORE
 
 #Bot Token 
 #Change If you wish to use your own bot
-botstr = os.getenv("DISCORD")
-#botstr = "{token}"
+botStr = os.getenv("DISCORD")
+#botStr = "{token}"
 
 #Maps names sorted into categories
 NonNative = ["singleplayer", "sp_a1_intro1", "sp_a1_intro2", "sp_a1_intro7", "sp_a1_wakeup", "sp_a2_laser_intro", "sp_a2_catapult_intro", "sp_a2_bts6", "sp_a2_core", "sp_a3_00", "sp_a4_intro", "sp_a4_finale1", "AMC", "glitchless", "inbounds", "OOB", "sla", "inboundNoSla"]

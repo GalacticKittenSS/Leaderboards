@@ -1,68 +1,148 @@
 import requests
 from bs4 import BeautifulSoup
+import json
 
 class LeaderboardGroup():
-    def __init__(self, app_id, name):
-        xml = requests.get(f"https://steamcommunity.com/stats/{app_id}/leaderboards/?xml=1")
-        _bs = BeautifulSoup(xml.content, features="lxml")
-        self.app_id = app_id
-        for leaderboard in _bs.find_all("leaderboard"):
-          if leaderboard.find("name").text == name:
-            self.leaderboard = ProtoLeaderboard(leaderboard, app_id)
+  def __init__(self, app_id, guild_id):
+    self.app_id = app_id
+    self.guild_id = guild_id
+    self.data = []
+    self.urlData = ""
+    
+  def loadFile(self, filename):
+    with open(filename, "r") as f:
+      data = json.load(f)[str(self.guild_id)]
+    return data
+  
+  def loadUrl(self, lbname):
+    xml = requests.get(f"https://steamcommunity.com/stats/{self.app_id}/leaderboards/{lbname}?xml=1")
+    soup = BeautifulSoup(xml.content, features="lxml")
+    
+    for leaderboard in soup.find_all("leaderboard"):
+      if leaderboard.find("name").text == lbname:
+        return leaderboard.url.text
+    
+    raise Exception("\nError 404: Leaderboard Not Found\nPlease Enter Valid Leaderboard")
+    return "404"
+    
+  def createFromSteam(self, filename, lbname):
+    ids = self.loadFile(filename)
+    self.urlData = self.loadUrl(lbname)
+  
+    for name in ids:
+      lb = Leaderboard(self.app_id, lbname, True)
+      entry = lb.getEntry(ids[name], self.urlData)
+      score = entry.getTime()
+      self.data.append(f"{score},{name}")
 
-    def __repr__(self):
-        return f"<LeaderboardGroup for {self.app_id} with {len(self.leaderboards)} leaderboards>"
+  def createFromFile(self, filename):
+    file =  self.loadFile(filename)
 
-    def get(self):
-      return self.leaderboard.full()
+    for name in file:
+      score = file[name]
+      for data in self.data:
+        if name in data:
+          self.data[self.data.index(data)] = f"{score},{name}"
+          return
+      self.data.append(f"{score},{name}")
+    
+  def getResult(self):
+    self.data.sort()
+    place = 1
+    result = "NULL"  
+    
+    for key in self.data:
+      score, name = key.split(",")
+      page = f"#{place} - {name}: {score}\n"
+      place += 1
+      
+      if result != "NULL":
+        result = result + page
+      else:
+        result = page
+        
+    return result
+      
+  def getData(self):
+    return self.data
 
-class ProtoLeaderboard:
-    def __init__(self, soup, app_id):
-        self.url = soup.url.text
-        self.lbid = int(soup.lbid.text)
-        self.name = soup.find("name").text
-        self.display_name = soup.display_name.text
-        self.entries = int(soup.entries.text)
-        self.sort_method = int(soup.sortmethod.text)
-        self.display_type = int(soup.displaytype.text)
-        self.app_id = app_id
+  def getUrl(self):
+    return self.urlData
+        
+class Leaderboard():
+  def __init__(self, app_id, lbname, group=False):
+    self.app_id = app_id
+    self.lbname = lbname
+    self.group = group
+    pass
 
-    def full(self) -> "Leaderboard":
-        return Leaderboard(protoleaderboard=self)
+  def load(self):
+    xml = requests.get(f"https://steamcommunity.com/stats/{self.app_id}/leaderboards/{self.lbname}?xml=1")
+    soup = BeautifulSoup(xml.content, features="lxml")
+    
+    for leaderboard in soup.find_all("leaderboard"):
+      if leaderboard.find("name").text == self.lbname:
+        return leaderboard.url.text
+    
+    raise Exception("Error 404: Leaderboard Not Found\nPlease Enter Valid Leaderboard")
+    return "404"
 
-class Leaderboard:
-    def __init__(self, app_id=None, lbid=None, *, protoleaderboard=None):
-        if protoleaderboard:
-            self.url = protoleaderboard.url
-            self.lbid = protoleaderboard.lbid
-            self.name = protoleaderboard.name
-            self.display_name = protoleaderboard.display_name
-            self.entry_number = protoleaderboard.entries
-            self.sort_method = protoleaderboard.sort_method
-            self.app_id = protoleaderboard.app_id
-            
-            xml = requests.get(self.url)
-            _bs = BeautifulSoup(xml.content, features="lxml")
-            self.all_entries = _bs.entries
+  def getEntry(self, steam_id, xml:str=None):
+    if self.group == False:
+      xml = self.load()
 
-    def __repr__(self):
-      pass
+      if xml == "404":
+        return "Leaderboard Not Found"
 
-    def find_entry(self, steam_id=None, *, rank=None):
-        if bool(steam_id) + bool(rank) > 1:
-            raise ValueError("You can only find an entry by 1 parameter.")
-        if steam_id is not None:
-            if not isinstance(steam_id, int):
-                raise ValueError("Steam id must be a int")
-            for entry in self.all_entries:
-              if int(entry.steamid.text) == steam_id:
-                  return entry
-            else:
-                return None
-        elif rank is not None:
-            if not isinstance(rank, int):
-                raise ValueError("Rank must be an int")
-            try:
-                return self.all_entries[rank - 1]
-            except IndexError:
-                return None
+    xml = requests.get(xml + f"&steamid={steam_id}")
+    soup = BeautifulSoup(xml.content, features="lxml")
+    
+    result = "Entry Not Found"
+    
+    for entry in soup.find_all("entry"):
+      if entry.steamid.text == str(steam_id):
+        result = Entry(entry)
+
+    return result
+
+  def getUrl(self, *, steam_id=0):
+    url = self.load()
+
+    if steam_id != 0:
+      url = url + f"&steamid={steam_id}"
+
+    if url != "404":
+      return url
+
+class Entry():
+  def __init__(self, entry):
+    self.steam_id = entry.steamid.text
+    self.score = entry.score.text
+    self.time = self.convertScore(entry.score.text)
+    self.rank = entry.rank.text
+
+  def convertScore(self, score):
+    secs, ms = score[:len(score) - 2], score[len(score) - 2:]
+    minutes = int(secs) // 60
+    seconds = int(secs) % 60
+  
+    if seconds < 10:
+      seconds = f"0{seconds}"
+  
+    if minutes != 0:
+      result = f"{minutes}:{seconds}"
+    else:
+      result = f"{seconds}"
+    
+    tm = f"{result}.{ms}"
+    
+    return tm
+
+  def getScore(self):
+    return self.score
+
+  def getTime(self):
+    return self.time
+
+  def getRank(self):
+    return self.rank
