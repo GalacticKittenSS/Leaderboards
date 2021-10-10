@@ -50,6 +50,7 @@ async def leaderboard(ctx, map=None, user:commands.MemberConverter=None):
       if listOfMaps[key] == map:
         map = key
         break
+      
 
   url = None
   result = "Could Not Find Result"
@@ -66,8 +67,8 @@ async def leaderboard(ctx, map=None, user:commands.MemberConverter=None):
     
     if os.path.exists(f"Leaderboards/{listOfMaps[map]}.json"):
       with open(f"Leaderboards/{listOfMaps[map]}.json", "r") as f:
-        score = json.load(f)[ctx.guild.id][user.name]
-        result = f"**{user.name}**'s score on **{map}** is **{score}**"
+        name = json.load(f)[ctx.guild.id][user.name]
+        result = f"**{name['nickname']}**'s score on **{map}** is **{name['time']}**"
   
   else:
     lb = steamlb.LeaderboardGroup(620, ctx.guild.id)
@@ -88,7 +89,7 @@ async def leaderboard(ctx, map=None, user:commands.MemberConverter=None):
   print(f"Finished in {(toc - tic):0.4} Seconds")
 
 @client.command(help="Sets a Time for a User")
-async def setTime(ctx, map, nTime, user:commands.MemberConverter=None):
+async def setTime(ctx, map, nTime, user:commands.MemberConverter=None, nickname=None):
   if user == None:
     user = ctx.author
   elif user != ctx.author:
@@ -98,7 +99,10 @@ async def setTime(ctx, map, nTime, user:commands.MemberConverter=None):
     
     if (storage.modRole not in roles) and (storage.secondRole not in roles):
       return
-  
+
+  if nickname == None:
+    nickname = user.name
+
   with open("Leaderboards/.maps.json", "r") as f:
     listOfMaps = json.load(f)
   
@@ -117,12 +121,25 @@ async def setTime(ctx, map, nTime, user:commands.MemberConverter=None):
   if str(ctx.guild.id) not in js:
     js[str(ctx.guild.id)] = {}
 
-  js[str(ctx.guild.id)][str(user.name)] = nTime
+  if str(user.name) not in js[str(ctx.guild.id)]:
+    js[str(ctx.guild.id)][str(user.name)] = {}
+
+  js[str(ctx.guild.id)][str(user.name)]["nickname"] = nickname
+  js[str(ctx.guild.id)][str(user.name)]["time"] = nTime
 
   with open(f"Leaderboards/{listOfMaps[map]}.json", "w") as f:
     json.dump(js, f, indent=2)
+
+  await ctx.send(f"{nickname} new time is {nTime}")
   
-  await ctx.send(f"{user.name} new time is {nTime}")
+  if listOfMaps[map] == "singleplayer":
+    lb = steamlb.LeaderboardGroup(620, ctx.guild.id)
+    lb.createFromFile(f"Leaderboards/singleplayer.json")
+    result = lb.getResult()
+
+  message = await client.get_channel(storage.pbChannel).fetch_message(storage.pbMessage)
+  await message.edit(content=result)
+  
 
 #Sets Member steam ID 
 @client.command(help= "Set your steam id", aliases=["steam", "setId", "id"])
@@ -132,6 +149,7 @@ async def setSteamId(ctx, id, member: commands.MemberConverter=None):
   if member == None:
     member = ctx.author
   elif member != ctx.author:
+    print("Hello")
     roles = []
     for role in ctx.author.roles:
       roles.append(role.name)
@@ -151,6 +169,12 @@ async def setSteamId(ctx, id, member: commands.MemberConverter=None):
     json.dump(new, f, indent=2)
     
   await ctx.send(f"Set Steam Id for {member.name}")
+
+@client.command()
+async def message(ctx, message):
+  msg = await ctx.channel.send(message)
+  storage.pbChannel = ctx.channel.id
+  storage.pbMessage = msg.id
 
 #Spit out a random map
 @client.command(help="Spit out a random map", aliases=["choosemap", "map", "choose"])
