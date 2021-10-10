@@ -20,8 +20,6 @@ nonNative = storage.NonNative
 category = storage.category
 coop = storage.coop
 
-#Converts Seconds to Minutes and Seconds
-
 #EVENTS
 #On Bot Ready
 @client.event
@@ -72,11 +70,11 @@ async def leaderboard(ctx, map=None, user:commands.MemberConverter=None):
   
   else:
     lb = steamlb.LeaderboardGroup(620, ctx.guild.id)
+    if os.path.exists(f"Leaderboards/{listOfMaps[map]}.json"):
+      lb.createFromFile(f"Leaderboards/{listOfMaps[map]}.json")
     if listOfMaps[map] not in nonNative:
       lb.createFromSteam("steam_id.json", f"challenge_besttime_{listOfMaps[map]}")
       url = lb.getUrl().split('/')[6]
-    if os.path.exists(f"Leaderboards/{listOfMaps[map]}.json"):
-      lb.createFromFile(f"Leaderboards/{listOfMaps[map]}.json")
     result = lb.getResult()
 
   if url == None:
@@ -88,6 +86,7 @@ async def leaderboard(ctx, map=None, user:commands.MemberConverter=None):
   toc = time.perf_counter()
   print(f"Finished in {(toc - tic):0.4} Seconds")
 
+#Sets Time for User in File
 @client.command(help="Sets a Time for a User")
 async def setTime(ctx, map, nTime, user:commands.MemberConverter=None, nickname=None):
   if user == None:

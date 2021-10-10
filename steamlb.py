@@ -33,6 +33,10 @@ class LeaderboardGroup():
       lb = Leaderboard(self.app_id, lbname, True)
       entry = lb.getEntry(ids[name], self.urlData)
       score = entry.getTime()
+      for data in self.data:
+        if name in data:
+          self.data[self.data.index(data)] = f"{score},{name}"
+          return
       self.data.append(f"{score},{name}")
 
   def createFromFile(self, filename):
