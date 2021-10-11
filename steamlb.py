@@ -25,30 +25,38 @@ class LeaderboardGroup():
     raise Exception("\nError 404: Leaderboard Not Found\nPlease Enter Valid Leaderboard")
     return "404"
     
-  def createFromSteam(self, filename, lbname):
-    ids = self.loadFile(filename)
+  def createFromSteam(self, ids, nicknames, lbname):
+    ids = self.loadFile(ids)
+    nicknames = self.loadFile(nicknames)
     self.urlData = self.loadUrl(lbname)
   
     for name in ids:
+      if name not in nicknames:
+        nicknames[name] = name
+
       lb = Leaderboard(self.app_id, lbname, True)
       entry = lb.getEntry(ids[name], self.urlData)
       score = entry.getTime()
       for data in self.data:
         if name in data:
-          self.data[self.data.index(data)] = f"{score},{name}"
+          self.data[self.data.index(data)] = f"{score},{nicknames[name]}"
           return
-      self.data.append(f"{score},{name}")
+      self.data.append(f"{score},{nicknames[name]}")
 
-  def createFromFile(self, filename):
+  def createFromFile(self, filename, nicknames):
     file = self.loadFile(filename)
+    nicknames = self.loadFile(nicknames)
 
     for name in file:
-      score = file[name]["time"]
+      if name not in nicknames:
+        nicknames[name] = name
+      
+      score = file[name]
       for data in self.data:
         if name in data:
-          self.data[self.data.index(data)] = f"{score},{file[name]['nickname']}"
+          self.data[self.data.index(data)] = f"{score},{nicknames[name]}"
           return
-      self.data.append(f"{score},{file[name]['nickname']}")
+      self.data.append(f"{score},{nicknames[name]}")
     
   def getResult(self):
     self.data.sort()
