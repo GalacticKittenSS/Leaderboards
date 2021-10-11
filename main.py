@@ -10,7 +10,7 @@ import time
 from discord.ext import commands
  
 #SetUp
-activity = discord.Game(name="%chooseMap, What should we play today? %help", type=3)
+activity = discord.Game(name="%map, What should we play today? %help", type=3)
 
 #SetUp Bot
 client = commands.Bot(command_prefix=storage.prefix, intents=discord.Intents.all(), help_command=help.CustomHelp(), activity=activity, status=discord.Status.online)
@@ -129,6 +129,11 @@ async def setTime(ctx, map, nTime, user:commands.MemberConverter=None):
   
   if listOfMaps[map] == "singleplayer":
     lb = steamlb.LeaderboardGroup(620, ctx.guild.id)
+    
+    if not os.path.exists("nicknames.json"):
+      with open("nicknames.json", "w") as f:
+        json.dump({f"{ctx.guild.id}": {}}, f, indent=2)
+
     lb.createFromFile(f"Leaderboards/singleplayer.json", "nicknames.json")
     result = lb.getResult()
 
@@ -149,13 +154,16 @@ async def setSteamId(ctx, id, member: commands.MemberConverter=None):
     if (storage.modRole not in roles) and (storage.secondRole not in roles):
       return
   
-  with open(f"steam_id.json", "r") as f:
-    new = json.load(f)
-  
-  if ctx.guild.id not in new:
-    new[ctx.guild.id] = {}
+  if os.path.exists("steam_id.json"):
+    with open("steam_id.json", "r") as f:
+      new = json.load(f)
+  else:
+    new = {}
 
-  new[ctx.guild.id][member.name] = str(id)
+  if str(ctx.guild.id) not in new:
+    new[str(ctx.guild.id)] = {}
+
+  new[str(ctx.guild.id)][member.name] = str(id)
   
   with open(f"steam_id.json", "w") as f:
     json.dump(new, f, indent=2)
@@ -180,8 +188,14 @@ async def setNickname(ctx, nickname, user:commands.MemberConverter=None):
     if (storage.modRole not in roles) and (storage.secondRole not in roles):
       return
 
-  with open("nicknames.json", "r") as f:
-    nicknames = json.load(f)
+  if os.path.exists("nicknames.json"):
+    with open("nicknames.json", "r") as f:
+      nicknames = json.load(f)
+  else:
+    nicknames = {}
+
+  if str(ctx.guild.id) not in nicknames:
+    nicknames[str(ctx.guild.id)] = {}
 
   nicknames[str(ctx.guild.id)][user.name] = nickname
 
@@ -190,12 +204,13 @@ async def setNickname(ctx, nickname, user:commands.MemberConverter=None):
 
   await ctx.send(content=f"Set {user.name}'s nickname to {nickname}")
 
-  lb = steamlb.LeaderboardGroup(620, ctx.guild.id)
-  lb.createFromFile(f"Leaderboards/singleplayer.json", "nicknames.json")
-  result = lb.getResult()
+  if os.path.exists("Leaderboards/singleplayer.json"):
+    lb = steamlb.LeaderboardGroup(620, ctx.guild.id)
+    lb.createFromFile("Leaderboards/singleplayer.json", "nicknames.json")
+    result = lb.getResult()
 
-  message = await client.get_channel(storage.pbChannel).fetch_message(storage.pbMessage)
-  await message.edit(content=result)
+    message = await client.get_channel(storage.pbChannel).fetch_message(storage.pbMessage)
+    await message.edit(content=result)
 
 #Spit out a random map
 @client.command(help="Spit out a random map", aliases=["choosemap", "map", "choose"])
