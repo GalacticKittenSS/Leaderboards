@@ -1,8 +1,8 @@
 import os
 
 #PLEASE ENTER
-modRole = ''
-secondRole = ''
+modRole = 'Moderators'
+secondRole = 'Bot Dev'
 prefix = "%"
 
 #IGNORE

@@ -127,7 +127,7 @@ async def setTime(ctx, map, nTime, user:commands.MemberConverter=None):
 
   await ctx.send(f"{user.name}'s' new time is **{nTime}**")
   
-  if listOfMaps[map] == "singleplayer":
+  if listOfMaps[map] == "singleplayer" and ctx.guild.id == 772972878106198028:
     lb = steamlb.LeaderboardGroup(620, ctx.guild.id)
     
     if not os.path.exists("nicknames.json"):
@@ -204,7 +204,7 @@ async def setNickname(ctx, nickname, user:commands.MemberConverter=None):
 
   await ctx.send(content=f"Set {user.name}'s nickname to {nickname}")
 
-  if os.path.exists("Leaderboards/singleplayer.json"):
+  if os.path.exists("Leaderboards/singleplayer.json") and ctx.guild.id == 772972878106198028:
     lb = steamlb.LeaderboardGroup(620, ctx.guild.id)
     lb.createFromFile("Leaderboards/singleplayer.json", "nicknames.json")
     result = lb.getResult()
