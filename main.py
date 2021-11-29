@@ -53,39 +53,69 @@ async def leaderboard(ctx, map=None, user:commands.MemberConverter=None):
   url = None
   result = "Could Not Find Result"
   
-  if user != None:
-    if listOfMaps[map] not in nonNative:
-      with open(f"steam_id.json", "r") as f:
-        ids = json.load(f)[str(ctx.guild.id)]
+  try:
+    if user == None:
+      #Get General Results for Specific Map
 
-      lb = steamlb.Leaderboard(620, f"challenge_besttime_{listOfMaps[map]}")
-      score = lb.getEntry(ids[user.name])
-      url = lb.getUrl().split('/')[6]
-      result = f"**{user.name}**'s score on **{map}** is **{score.getTime()}**\n and is placed **#{score.getRank()}** on Steam leaderboards"
+      #Load Leaderboard
+      lb = steamlb.LeaderboardGroup(620, ctx.guild.id)
+      
+      #If file exist add file data to leaderboard
+      if os.path.exists(f"Leaderboards/{listOfMaps[map]}.json"):
+        lb.createFromFile(f"Leaderboards/{listOfMaps[map]}.json", "nicknames.json")
+      
+      #If map is on steam Leaderboards, add to leaderboard group
+      if listOfMaps[map] not in nonNative:
+        lb.createFromSteam("steam_id.json", "nicknames.json", f"challenge_besttime_{listOfMaps[map]}")
+        url = lb.getUrl().split('/')[6]
+      
+      #Get Result and Order from Leaderboard Group
+      result = lb.getResult()
     
-    if os.path.exists(f"Leaderboards/{listOfMaps[map]}.json"):
-      with open(f"Leaderboards/{listOfMaps[map]}.json", "r") as f:
-        score = json.load(f)[ctx.guild.id][user.name]
-        result = f"**{user.name}**'s score on **{map}** is **{score}**"
-  
-  else:
-    lb = steamlb.LeaderboardGroup(620, ctx.guild.id)
-    if os.path.exists(f"Leaderboards/{listOfMaps[map]}.json"):
-      lb.createFromFile(f"Leaderboards/{listOfMaps[map]}.json", "nicknames.json")
-    if listOfMaps[map] not in nonNative:
-      lb.createFromSteam("steam_id.json", "nicknames.json", f"challenge_besttime_{listOfMaps[map]}")
-      url = lb.getUrl().split('/')[6]
-    result = lb.getResult()
+    else:
+      #Get User Specific Result
 
-  if result == "NULL":
-    result = "Could Not Find Result"
+      #If map is on Steam Leaderboards, Get Rank and Score
+      if listOfMaps[map] not in nonNative:
+        
+        #Get Steam Id's
+        with open(f"steam_id.json", "r") as f:
+          ids = json.load(f)[str(ctx.guild.id)]
 
-  if url == None:
-    embed = discord.Embed(title=f"{map}", description=result, colour=discord.Colour(0x8d78b9))
-  else:
-    embed = discord.Embed(title=f"{map}", description=result, colour=discord.Colour(0x8d78b9), url=f"https://board.portal2.sr/chamber/{url}")
-  await preMsg.edit(content="Showing Results:", embed=embed)
-  
+        #Get Leaderboard from Map
+        lb = steamlb.Leaderboard(620, f"challenge_besttime_{listOfMaps[map]}")
+        
+        #Find and Get Entry
+        score = lb.getEntry(ids[user.name])
+        
+        #Set Result
+        url = lb.getUrl().split('/')[6]
+        result = f"**{user.name}**'s score on **{map}** is **{score.getTime()}**\n and is placed **#{score.getRank()}** on Steam leaderboards"
+      
+     #If file exist add file data to result
+      if os.path.exists(f"Leaderboards/{listOfMaps[map]}.json"):
+        #Get Map and Score from file
+        with open(f"Leaderboards/{listOfMaps[map]}.json", "r") as f:
+          score = json.load(f)[ctx.guild.id][user.name]
+          #Set Result
+          result = f"**{user.name}**'s score on **{map}** is **{score}**"
+
+    if url == None:
+      #If we don't manage to get URL of map
+      embed = discord.Embed(title=f"{map}", description=result, colour=discord.Colour(0x8d78b9))
+    else:
+      #If we manage to get URL of map
+      embed = discord.Embed(title=f"{map}", description=result, colour=discord.Colour(0x8d78b9), url=f"https://board.portal2.sr/chamber/{url}")
+    
+    #Show Resultss by editing message
+    await preMsg.edit(content="Showing Results:", embed=embed)
+
+  #If Exception was raised
+  except Exception as e:
+    print(e)
+    embed = discord.Embed(title=f"{e}", description=f"Unable to retrieve results due to fatal error: {e}", colour=discord.Colour(0x8d78b9))
+    await preMsg.edit(content="An Error Occured:", embed=embed)
+
   toc = time.perf_counter()
   print(f"Finished in {(toc - tic):0.4} Seconds")
 
