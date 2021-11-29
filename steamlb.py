@@ -8,19 +8,24 @@ class LeaderboardGroup():
     self.guild_id = guild_id
     self.data = []
     self.urlData = ""
+    self.warnings = []
     
   def loadFile(self, filename):
-    data = "404"
+    data = None
     try:
       with open(filename, "r") as f:
         js = json.load(f)
       
         if not str(self.guild_id) in js:
-          print(f"ERROR: Guild ID {self.guild_id} not found in file {filename}")
+          error = f"Guild ID {self.guild_id} not found in file {filename}"
+          print("WARNING: " + error)
+          self.warnings.append(error)
         else:
           data = js[str(self.guild_id)]
     except:
-      print(f"ERROR: Could Not Load File {filename}")
+      error = f"Could Not Load File {filename}"
+      print("WARNING: " + error)
+      self.warnings.append(error)
 
     return data
   
@@ -30,43 +35,52 @@ class LeaderboardGroup():
     try:
       soup = BeautifulSoup(xml.content, features="lxml")
     except:
-      print(f"Could Not Load URL {xml}")
+      error = f"Could Not Load URL {xml}"
+      print("WARNING: " + error)
+      self.warnings.append(error)
     
+
     for leaderboard in soup.find_all("leaderboard"):
       if leaderboard.find("name").text == lbname:
         return leaderboard.url.text
-    
-    print(f"ERROR: Leaderboard {lbname} Not Found")
-    return "404"
+
+    error = f"Leaderboard {lbname} Not Found"
+    print("WARNING: " + error)
+    self.warnings.append(error)
+
+    return None
     
   def createFromSteam(self, ids, nicknames, lbname):
     ids = self.loadFile(ids)
+    nicknames = self.loadFile(nicknames)
     self.urlData = self.loadUrl(lbname)
 
-    nicknames = self.loadFile(nicknames)
-    if nicknames == "404":
-      print("WARNING: Could Not Get Nicknames")
-      nicknames = ""
-
-    if ids == "404" or self.urlData == "404":
+    if ids == None or self.urlData == None:
       return "Unable to retrieve leaderboard data"
-  
+    
     for name in ids:
+      if nicknames == None:
+        nicknames = {}
+
       if name not in nicknames:
         nicknames[name] = name
 
       lb = Leaderboard(self.app_id, lbname, True)
-      entry = lb.getEntry(ids[name], self.urlData) 
-      if entry != "Entry Not Found":
+      entry = lb.getEntry(ids[name], self.urlData)
+      if entry != None:
         entry.setName(nicknames[name])
       else:
-        print(f"ERROR: Could Not Find Entry under {name}")
+        error = f"Could Not Find Entry under {name} with id {ids[name]}"
+        print("WARNING: " + error)
+        self.warnings.append(error)
         break
-        
+
       for data in self.data:
+        #If Entry is already in Data
         if entry.getName() == data.getName():
           self.data[self.data.index(data)] = entry
           return
+     
       self.data.append(entry)
 
   def createFromFile(self, filename, nicknames):
@@ -96,17 +110,23 @@ class LeaderboardGroup():
   def getResult(self):
     self.sort(self.data)
     place = 1
-    result = "NULL"
+    result = None
     
     for key in self.data:
       page = f"#{place} - {key.getName()}: {key.getTime()}\n"
       place += 1
       
-      if result != "NULL":
+      if result != None:
         result = result + page
       else:
         result = page
-        
+
+    if result == None: 
+      result = f"__Found {len(self.warnings)} Warnings:__"
+
+      for w in self.warnings:
+        result = result + "\n" + w
+    
     return result
       
   def getData(self):
@@ -130,20 +150,20 @@ class Leaderboard():
       if leaderboard.find(":name").text == self.lbname:
         return leaderboard.url.text
     
-    raise Exception("Error 404: Leaderboard Not Found\nPlease Enter Valid Leaderboard")
-    return "404"
+    print(f"ERROR: Leaderboard {self.lbname} or App ID {self.app_id} invalid!")
+    return "error"
 
   def getEntry(self, steam_id, xml:str=None):
     if self.group == False:
       xml = self.load()
 
-      if xml == "404":
-        return "Leaderboard Not Found"
+      if xml == "error":
+        return None
 
     xml = requests.get(xml + f"&steamid={steam_id}")
     soup = BeautifulSoup(xml.content, features="lxml")
     
-    result = "Entry Not Found"
+    result = None
     
     for entry in soup.find_all("entry"):
       if entry.steamid.text == str(steam_id):
@@ -157,8 +177,10 @@ class Leaderboard():
     if steam_id != 0:
       url = url + f"&steamid={steam_id}"
 
-    if url != "404":
+    if url != None:
       return url
+
+    return None
 
 class basicEntry():
   def __init__(self, name, score, rank):
