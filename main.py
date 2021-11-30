@@ -10,10 +10,21 @@ import time
 from discord.ext import commands
  
 #SetUp
+def get_prefix(client, message): ##first we define get_prefix
+  if os.path.exists(f'Settings/{message.guild.id}.json'):
+    with open(f'Settings/{message.guild.id}.json', 'r') as f: ##we open and read the prefixes.json, assuming it's in the same file
+        prefix = json.load(f)["Prefix"]
+  
+    return prefix
+  else:
+    return "%"
+
 activity = discord.Game(name="%map, What should we play today? %help", type=3)
 
+customHelp = help.CustomHelp()
+
 #SetUp Bot
-client = commands.Bot(command_prefix=storage.prefix, intents=discord.Intents.all(), help_command=help.CustomHelp(), activity=activity, status=discord.Status.online)
+client = commands.Bot(command_prefix=(get_prefix), intents=discord.Intents.all(), help_command=customHelp, activity=activity, status=discord.Status.online)
 
 #Maps Categories
 nonNative = storage.NonNative
@@ -29,12 +40,51 @@ async def on_ready():
 #Update Help List
 @client.event
 async def on_raw_reaction_add(payload):
-  await help.reaction(client, payload)
+  await customHelp.reaction(client, payload)
 
 #COMMANDS
+@client.command()
+async def setup(ctx, prefix:str, *roles):
+  if os.path.exists(f"Settings/{ctx.guild.id}.json"):
+    required_roles = json.load(open(f"Settings/{ctx.guild.id}.json", "r"))["Roles"]
+    
+    found = False
+    for user_role in ctx.author.roles:
+      if str(user_role) in required_roles:
+        found = True
+        break
+
+    if not found:
+      await ctx.send(f"You do not have any of the required roles!")
+      return
+
+  file = {}
+  
+  file["Prefix"] = prefix
+  
+  file["Roles"] = roles
+  
+  file["PBList"] = { }
+  file["PBList"]["Channel"] = ""
+  file["PBList"]["Message"] = ""
+  
+  file["Help"] = { }
+  file["Help"]["Channel"] = ""
+  file["Help"]["Message"] = ""
+  file["Help"]["Index"] = -1
+
+  with open(f"Settings/{ctx.guild.id}.json", "w") as f:
+    json.dump(file, f, indent=2)
+
+  await ctx.send(f"Setup Server with prefix {prefix} and mod roles {roles}!")
+
 #Gets and sets leaderboard time
 @client.command(help="Returns a Leaderboard of all known times", aliases=["getTime", "gettime", "Time", "time", "lb"])
 async def leaderboard(ctx, map=None, user:commands.MemberConverter=None):
+  if not os.path.exists(f'Settings/{ctx.guild.id}.json'):
+    await ctx.send("Please Setup Bot to Continue!\n%setup [prefix you wish to use] [roles that can change others data]")
+    return
+    
   tic = time.perf_counter()
   
   #await ctx.message.delete()
@@ -61,13 +111,12 @@ async def leaderboard(ctx, map=None, user:commands.MemberConverter=None):
       lb = steamlb.LeaderboardGroup(620, ctx.guild.id)
       
       #If file exist add file data to leaderboard
-      if os.path.exists(f"Leaderboards/{listOfMaps[map]}.json"):
-        lb.createFromFile(f"Leaderboards/{listOfMaps[map]}.json", "nicknames.json")
+      lb.createFromFile(f"Leaderboards/{listOfMaps[map]}.json", "nicknames.json")
       
       #If map is on steam Leaderboards, add to leaderboard group
       if listOfMaps[map] not in nonNative:
         lb.createFromSteam("steam_id.json", "nicknames.json", f"challenge_besttime_{listOfMaps[map]}")
-        url = lb.getUrl().split('/')[6]
+        url = lb.SteamLeaderboardNumber()
       
       #Get Result and Order from Leaderboard Group
       result = lb.getResult()
@@ -92,8 +141,8 @@ async def leaderboard(ctx, map=None, user:commands.MemberConverter=None):
         url = lb.getUrl().split('/')[6]
         result = f"**{user.name}**'s score on **{map}** is **{score.getTime()}**\n and is placed **#{score.getRank()}** on Steam leaderboards"
       
-     #If file exist add file data to result
-      if os.path.exists(f"Leaderboards/{listOfMaps[map]}.json"):
+    #If file exist add file data to result
+    if os.path.exists(f"Leaderboards/{listOfMaps[map]}.json"):
         #Get Map and Score from file
         with open(f"Leaderboards/{listOfMaps[map]}.json", "r") as f:
           score = json.load(f)[ctx.guild.id][user.name]
@@ -122,14 +171,23 @@ async def leaderboard(ctx, map=None, user:commands.MemberConverter=None):
 #Sets Time for User in File
 @client.command(help="Sets a Time for a User", aliases=["settime"])
 async def setTime(ctx, map, nTime, user:commands.MemberConverter=None):
+  if not os.path.exists(f'Settings/{ctx.guild.id}.json'):
+    await ctx.send("Please Setup Bot to Continue!\n%setup [prefix you wish to use] [roles that can change others data]")
+    return
+    
   if user == None:
     user = ctx.author
   elif user != ctx.author:
-    roles = []
-    for role in ctx.author.roles:
-      roles.append(role.name)
+    required_roles = json.load(open(f"Settings/{ctx.guild.id}.json", "r"))["Roles"]
     
-    if (storage.modRole not in roles) and (storage.secondRole not in roles):
+    found = False
+    for user_role in ctx.author.roles:
+      if str(user_role) in required_roles:
+        found = True
+        break
+
+    if not found:
+      await ctx.send(f"You do not have any of the required roles!")
       return
 
   with open("Leaderboards/.maps.json", "r") as f:
@@ -157,7 +215,7 @@ async def setTime(ctx, map, nTime, user:commands.MemberConverter=None):
 
   await ctx.send(f"{user.name}'s' new time is **{nTime}**")
   
-  if listOfMaps[map] == "singleplayer" and ctx.guild.id == 772972878106198028:
+  if listOfMaps[map] == "singleplayer":
     lb = steamlb.LeaderboardGroup(620, ctx.guild.id)
     
     if not os.path.exists("nicknames.json"):
@@ -167,21 +225,32 @@ async def setTime(ctx, map, nTime, user:commands.MemberConverter=None):
     lb.createFromFile(f"Leaderboards/singleplayer.json", "nicknames.json")
     result = lb.getResult()
 
-    message = await client.get_channel(storage.pbChannel).fetch_message(storage.pbMessage)
+    
+    pbList = json.load(open(f"Settings/{ctx.guild.id}.json", "r"))["PBList"]
+    message = await client.get_channel(pbList["Channel"]).fetch_message(pbList["Message"])
     await message.edit(content=result)
   
 
 #Sets Member steam ID 
 @client.command(help= "Set your steam id", aliases=["steam", "setId", "id"])
-async def setSteamId(ctx, id, member: commands.MemberConverter=None):
-  if member == None:
-    member = ctx.author
-  elif member != ctx.author:
-    roles = []
-    for role in ctx.author.roles:
-      roles.append(role.name)
+async def setSteamId(ctx, id, user: commands.MemberConverter=None):
+  if not os.path.exists(f'Settings/{ctx.guild.id}.json'):
+    ctx.send("Please Setup Bot to Continue!\n%setup [prefix you wish to use] [roles that can change others data]")
+    return
+
+  if user == None:
+    user = ctx.author
+  elif user != ctx.author:
+    required_roles = json.load(open(f"Settings/{ctx.guild.id}.json", "r"))["Roles"]
     
-    if (storage.modRole not in roles) and (storage.secondRole not in roles):
+    found = False
+    for user_role in ctx.author.roles:
+      if str(user_role) in required_roles:
+        found = True
+        break
+
+    if not found:
+      await ctx.send(f"You do not have any of the required roles!")
       return
   
   if os.path.exists("steam_id.json"):
@@ -193,29 +262,46 @@ async def setSteamId(ctx, id, member: commands.MemberConverter=None):
   if str(ctx.guild.id) not in new:
     new[str(ctx.guild.id)] = {}
 
-  new[str(ctx.guild.id)][member.name] = str(id)
+  new[str(ctx.guild.id)][user.name] = str(id)
   
   with open(f"steam_id.json", "w") as f:
     json.dump(new, f, indent=2)
     
-  await ctx.send(f"Set Steam Id for {member.name}")
+  await ctx.send(f"Set Steam Id for {user.name}")
 
 @client.command()
 async def message(ctx, message):
+  if not os.path.exists(f'Settings/{ctx.guild.id}.json'):
+    await ctx.send("Please Setup Bot to Continue!\n%setup [prefix you wish to use] [roles that can change others data]")
+    return
+    
+  pbList = json.load(open(f"Settings/{ctx.guild.id}.json", "r"))
   msg = await ctx.channel.send(message)
-  storage.pbChannel = ctx.channel.id
-  storage.pbMessage = msg.id
+  pbList["PBList"]["Channel"] = ctx.channel.id
+  pbList["PBList"]["Message"] = msg.id
+
+  with open(f"Settings/{ctx.guild.id}.json", "w") as f:
+    json.dump(pbList, f, indent=2)
 
 @client.command()
 async def setNickname(ctx, nickname, user:commands.MemberConverter=None):
+  if not os.path.exists(f'Settings/{ctx.guild.id}.json'):
+    await ctx.send("Please Setup Bot to Continue!\n%setup [prefix you wish to use] [roles that can change others data]")
+    return
+    
   if user == None:
     user = ctx.author
   elif user != ctx.author:
-    roles = []
-    for role in ctx.author.roles:
-      roles.append(role.name)
+    required_roles = json.load(open(f"Settings/{ctx.guild.id}.json", "r"))["Roles"]
     
-    if (storage.modRole not in roles) and (storage.secondRole not in roles):
+    found = False
+    for user_role in ctx.author.roles:
+      if str(user_role) in required_roles:
+        found = True
+        break
+
+    if not found:
+      await ctx.send(f"You do not have any of the required roles!")
       return
 
   if os.path.exists("nicknames.json"):
