@@ -16,7 +16,8 @@ A modern, easy to use, feature-rich, and async ready API wrapper for Discord wri
 Installation
 -----------
 
-1. Head to `Leaderboard Bot<https://discord.com/api/oauth2/authorize?client_id=862608581119180811&permissions=75840&scope=bot>`_
+1. Head to `Leaderboard Bot
+<https://discord.com/api/oauth2/authorize?client_id=862608581119180811&permissions=75840&scope=bot>`_
 
 2. Select Sever you wish to add it to.
 
