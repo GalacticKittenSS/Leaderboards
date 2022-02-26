@@ -16,20 +16,17 @@ A modern, easy to use, feature-rich, and async ready API wrapper for Discord wri
 Installation
 -----------
 
-**DISCORD BOT**
-
-1. Head to https://discord.com/api/oauth2/authorize?client_id=862608581119180811&permissions=75840&scope=bot
+1. Head to `Leaderboard Bot
+<https://discord.com/api/oauth2/authorize?client_id=862608581119180811&permissions=75840&scope=bot>`_
 
 2. Select Sever you wish to add it to.
 
-Setup
------------
-* Open Storage.py
-* Enter all the empty variables
-* Run the script
+3. Head to the Server and type `%setup [prefix you wish to use] [roles that can change others data]`
 
 QnA
 -----------
+`%` prefix by default
+
 * What is Leaderboard bot?
 
 	* Leaderboard bot is a discord bot that accesses the steam leaderboards to gather leaderboard data among discord server's.
@@ -37,7 +34,7 @@ QnA
 
 * What does Leaderboard bot do?
 
-	* Leaderboard bot will give you up to date (up to 24 hours) information about specific Portal 2 leaderboard data in the discord server.
+	* Leaderboard bot will give you up to date information about specific Portal 2 leaderboard data in the discord server.
 
 
 * How does it do it?
@@ -68,7 +65,7 @@ QnA
 
 Commands
 -----------
-`%` prefix
+`%` prefix by default
 
 - time: 
 	Allows you to set and view 

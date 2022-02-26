@@ -1,12 +1,5 @@
 import os
 
-#PLEASE ENTER
-modRole = 'Moderators'
-secondRole = 'Bot Dev'
-prefix = "%"
-
-#IGNORE
-
 #Bot Token 
 #Change If you wish to use your own bot
 botStr = os.getenv("DISCORD")

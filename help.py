@@ -2,6 +2,8 @@ import discord
 from discord.ext import commands
 
 import storage
+import os
+import json
 import itertools
 
 class CustomHelp(commands.DefaultHelpCommand):
@@ -31,30 +33,40 @@ class CustomHelp(commands.DefaultHelpCommand):
         self.paginator.add_line()
 
     
-  async def send_pages(self, channel = None, message = None, pages = False):
-    try:
-      destination = self.get_destination()
+  async def send_pages(self, channel = None, message = None, allPages=False):
+    if not allPages:
+        try:
+            destination = self.get_destination()
 
-      for page in self.paginator.pages:
-        storage.current_sorted_commands = page
-        embed = discord.Embed(title="Help", description=page)
-        message = await destination.send(embed=embed)
-        storage.current_help_message.append(message)
-        storage.current_help_commands.append(page)
-        storage.current_help_index.append(-1)
-      
-        await message.add_reaction("⏮️")
-        await message.add_reaction("⏭️")
-    except:
-      destination = storage.client.get_channel(channel.id)
-      if pages:
+            file = json.load(open(f"Settings/{destination.guild.id}.json", "r"))
+            
+            for page in self.paginator.pages:
+                embed = discord.Embed(title="Help", description=page)
+                message = await destination.send(embed=embed)
+                
+                storage.current_sorted_commands = page
+                storage.current_help_commands.append(page)
+
+                file["Help"]["Message"] = message.id
+                file["Help"]["Channel"] = message.channel.id
+                file["Help"]["Index"] = -1
+        
+                await message.add_reaction("⏮️")
+                await message.add_reaction("⏭️")
+                
+            with open(f"Settings/{message.guild.id}.json", "w") as f:
+              json.dump(file, f, indent=2)
+        except:
+            for page in self.paginator.pages:
+                embed = discord.Embed(title="Help", description=page)
+                await message.edit(embed=embed)
+            
+    else:
         page = storage.current_sorted_commands
         embed = discord.Embed(title="Help", description=page)
         await message.edit(embed=embed)
-
-      for page in self.paginator.pages:
-        embed = discord.Embed(title="Help", description=page)
-        await message.edit(embed=embed)
+    
+    self.paginator.clear()
           
   async def send_bot_help(self, mapping):
     sorted = await super().filter_commands(storage.client.commands, sort=True)
@@ -64,6 +76,7 @@ class CustomHelp(commands.DefaultHelpCommand):
 
     for command, category in sorted:
       storage.current_help_commands.append(command)
+
     await super().send_bot_help(mapping)
   
   async def send_cog_help(self, cog):
@@ -72,13 +85,12 @@ class CustomHelp(commands.DefaultHelpCommand):
   async def send_group_help(self, group):
     await super().send_group_help(group)
     
-  async def send_next_help(self, channel, message, page=False, command = None):
-    if page:
-      await self.send_pages(channel=channel, message=message, pages=True)
-    else:
-      self.add_command_formatting(command)
-      self.paginator.close_page()
-      await self.send_pages(channel=channel, message=message)
+  async def send_next_help(self, channel, message, allPages=False, command = None):
+    if not allPages:
+        self.add_command_formatting(command)
+        self.paginator.close_page()
+    
+    await self.send_pages(channel, message, allPages)
 
 
   async def send_command_help(self, command):
@@ -86,54 +98,65 @@ class CustomHelp(commands.DefaultHelpCommand):
     self.paginator.close_page()
     await self.send_pages()
 
+  async def reaction(self, client, payload):
+    if not os.path.exists(f"Settings/{payload.guild_id}.json"):
+      return
+    
+    file = json.load(open(f"Settings/{payload.guild_id}.json", "r"))
+
+    if payload.user_id == client.user.id or payload.message_id != file["Help"]["Message"]:
+        return
+
+    channel = client.get_channel(file["Help"]["Channel"])
+    message = await channel.fetch_message(file["Help"]["Message"])
+
+    commands = storage.current_help_commands
+    index = file["Help"]["Index"]
+
+    if payload.emoji.name == "⏭️":
+        index += 1
+    if payload.emoji.name == "⏮️":
+        index -= 1
+
+    if index == len(commands):
+        index = 0
+    
+    if index == -1:
+        index = len(commands) - 1
+
+    await message.remove_reaction("⏭️", client.get_user(payload.user_id))
+    await message.remove_reaction("⏮️", client.get_user(payload.user_id))
+
+    file["Help"]["Index"] = index
+
+    with open(f"Settings/{payload.guild_id}.json", "w") as f:
+        json.dump(file, f, indent=2)
+
+    all = False
+
+    if index == len(commands) - 1:
+        all = True
+
+    await self.send_next_help(command=commands[index], channel=channel, message=message, allPages=all)
+
 def get_command_signature(command):
-	parent = command.parent
-	entries = []
-	while parent is not None:
-		if not parent.signature or parent.invoke_without_command:
-			entries.append(parent.name)
-		else:
-			entries.append(parent.name + ' ' + parent.signature)
-		parent = parent.parent
-	parent_sig = ' '.join(reversed(entries))
-
-	if len(command.aliases) > 0:
-		aliases = '|'.join(command.aliases)
-		fmt = '[%s|%s]' % (command.name, aliases)
-		if parent_sig:
-			fmt = parent_sig + ' ' + fmt
-		alias = fmt
-	else:
-		alias = command.name if not parent_sig else parent_sig + ' ' + command.name
-
-	return '%s%s %s' % ("%", alias, command.signature)
-
-async def reaction(client, payload):
-  count = -1
-  for value in storage.current_help_message:
-    channel = client.get_channel(value.channel.id) 
-    count = count + 1
-    async for message in channel.history(limit=200):
-      if message == storage.current_help_message[count] and payload.user_id != 862608581119180811 and message.id== payload.message_id:
-        index = storage.current_help_index[count]
-
-        if payload.emoji.name == "⏭️":
-          index = index + 1
-          await message.remove_reaction("⏭️", client.get_user(payload.user_id))
-        if payload.emoji.name == "⏮️":
-          index = index - 1
-          await message.remove_reaction("⏮️", client.get_user(payload.user_id))
-
-        if index == len(storage.current_help_commands) and len(storage.current_help_commands) > 0:
-          index = -len(storage.current_help_commands)
-        elif index == -len(storage.current_help_commands) and len(storage.current_help_commands) > 0:
-          index = len(storage.current_help_commands)
-        
-        storage.current_help_index[count]= index
-        print(index)
-        if index + 1 == len(storage.current_help_commands) or index == -1:
-          cmd = storage.current_help_commands[index - 1]
-          await help.CustomHelp().send_next_help(command=cmd, channel=channel, message= message, page=True)
+    parent = command.parent
+    entries = []
+    while parent is not None:
+        if not parent.signature or parent.invoke_without_command:
+            entries.append(parent.name)
         else:
-          cmd = storage.current_help_commands[index]
-          await help.CustomHelp().send_next_help(command=cmd, channel=channel, message= message)
+            entries.append(parent.name + ' ' + parent.signature)
+        parent = parent.parent
+    parent_sig = ' '.join(reversed(entries))
+
+    if len(command.aliases) > 0:
+        aliases = '|'.join(command.aliases)
+        fmt = '[%s|%s]' % (command.name, aliases)
+        if parent_sig:
+            fmt = parent_sig + ' ' + fmt
+        alias = fmt
+    else:
+        alias = command.name if not parent_sig else parent_sig + ' ' + command.name
+
+    return '%s%s %s' % ("%", alias, command.signature)
