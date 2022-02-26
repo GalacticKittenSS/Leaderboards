@@ -74,6 +74,7 @@ class LeaderboardGroup():
         entry.setName(nicknames[name])
       else:
         self.warnings.append(f"Could not find entry {name} with id {ids[name]}")
+        continue
 
       for data in self.data:
         if entry.getName() == data.getName():
