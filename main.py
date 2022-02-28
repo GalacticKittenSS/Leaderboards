@@ -117,10 +117,9 @@ async def leaderboard(ctx, map=None, user:commands.MemberConverter=None):
       if listOfMaps[map] not in nonNative:
         lb.createFromSteam("steam_id.json", "nicknames.json", f"challenge_besttime_{listOfMaps[map]}")
         url = lb.SteamLeaderboardNumber()
-      
+        
       #Get Result and Order from Leaderboard Group
       result = lb.getResult()
-    
     else:
       #Get User Specific Result
 
@@ -141,20 +140,20 @@ async def leaderboard(ctx, map=None, user:commands.MemberConverter=None):
         url = lb.getUrl().split('/')[6]
         result = f"**{user.name}**'s score on **{map}** is **{score.getTime()}**\n and is placed **#{score.getRank()}** on Steam leaderboards"
       
-    #If file exist add file data to result
-    if os.path.exists(f"Leaderboards/{listOfMaps[map]}.json"):
-        #Get Map and Score from file
-        with open(f"Leaderboards/{listOfMaps[map]}.json", "r") as f:
-          score = json.load(f)[ctx.guild.id][user.name]
-          #Set Result
-          result = f"**{user.name}**'s score on **{map}** is **{score}**"
+      #If file exist add file data to result
+      if os.path.exists(f"Leaderboards/{listOfMaps[map]}.json"):
+          #Get Map and Score from file
+          with open(f"Leaderboards/{listOfMaps[map]}.json", "r") as f:
+            score = json.load(f)[ctx.guild.id][user.name]
+            #Set Result
+            result = f"**{user.name}**'s score on **{map}** is **{score}**"
 
-    if url == None:
-      #If we don't manage to get URL of map
-      embed = discord.Embed(title=f"{map}", description=result, colour=discord.Colour(0x8d78b9))
-    else:
+    if url:
       #If we manage to get URL of map
       embed = discord.Embed(title=f"{map}", description=result, colour=discord.Colour(0x8d78b9), url=f"https://board.portal2.sr/chamber/{url}")
+    else:
+      #If we don't manage to get URL of map
+      embed = discord.Embed(title=f"{map}", description=result, colour=discord.Colour(0x8d78b9))
     
     #Show Resultss by editing message
     await preMsg.edit(content="Showing Results:", embed=embed)

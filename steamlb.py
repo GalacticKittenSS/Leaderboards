@@ -76,12 +76,15 @@ class LeaderboardGroup():
         self.warnings.append(f"Could not find entry {name} with id {ids[name]}")
         continue
 
+      found = False
       for data in self.data:
         if entry.getName() == data.getName():
           self.data[self.data.index(data)] = entry
-          return
+          found = True
+          break
     
-      self.data.append(entry)
+      if not found:
+        self.data.append(entry)
 
 
   def createFromFile(self, filename, nickname_file):
@@ -97,13 +100,16 @@ class LeaderboardGroup():
         nicknames[name] = name
       
       entry = basicEntry(nicknames[name], file[name], "Unknown")
+
+      found = False
+      for data in self.data:
+        if entry.getName() == data.getName():
+          self.data[self.data.index(data)] = entry
+          found = True
+          break
       
-    for data in self.data:
-      if entry.getName() == data.getName():
-        self.data[self.data.index(data)] = entry
-        return
-  
-    self.data.append(entry)
+      if not found:
+        self.data.append(entry)
 
   def sort(self, data):
     swapped = True
@@ -119,10 +125,17 @@ class LeaderboardGroup():
     data = self.sort(self.data)
     place = 1
     result = None
+    previous = basicEntry("Previous", "0.0", "Unknown")
 
     for key in data:
+      if previous.getScore() == key.getScore():
+        place -= 1
+        
       page = f"#{place} - {key.getName()}: {key.getTime()}\n"
-
+      
+      place += 1
+      previous.score = key.score
+      
       if result != None:
         result = result + page
       else:
