@@ -11,9 +11,10 @@ import SteamLeaderboards
 import Storage
 import CustomHelp
 import Utils
+import Logger
 
 #SetUp
-async def get_prefix(client, message): ##first we define get_prefix
+async def get_prefix(client, message):
   settings = await Utils.GetSettings(message.guild.id)
   prefix = "%"
   
@@ -28,12 +29,12 @@ customHelp = CustomHelp.Help()
 #SetUp Bot
 client = commands.Bot(command_prefix=(get_prefix), intents=discord.Intents.all(), help_command=customHelp, activity=activity, status=discord.Status.online)
 
-maps_directory = "Maps/"
-settings_directory = "Settings/"
+maps_directory = Storage.MapsDirectory
+settings_directory = Storage.SettingsDirectory
 
-maps_path = f"{maps_directory}Maps.json"
-nicknames_path = f"{settings_directory}nicknames.json"
-ids_path = f"{settings_directory}steam_ids.json"
+maps_path = Storage.MapsPath
+nicknames_path = Storage.NicknamesPath
+ids_path = Storage.IDsPath
 
 #Maps Categories
 nonNative = Storage.NonNative
@@ -44,7 +45,7 @@ coop = Storage.Coop
 #On Bot Ready
 @client.event
 async def on_ready():
-  print(f"Logged in as {client.user}.")
+  Logger.Info(f"Logged in as {client.user}.")
 
 #Update Help List
 @client.event
@@ -88,8 +89,9 @@ async def leaderboard(ctx, map=None, user:commands.MemberConverter=None):
   
   #await ctx.message.delete()
   preMsg = await ctx.send("Getting Leaderboards...")
+  Logger.Info("Getting Leaderboards...")
 
-  listOfMaps = Utils.GetJson(maps_path)
+  listOfMaps = Utils.LoadJson(maps_path)
   map = Utils.FindValueInArray(map, listOfMaps) 
 
   if map == None:
@@ -104,13 +106,15 @@ async def leaderboard(ctx, map=None, user:commands.MemberConverter=None):
 
       #Load Leaderboard
       lb = SteamLeaderboards.LeaderboardGroup(620, ctx.guild.id)
-      
+      lb.LoadNicknames(nicknames_path)
+
       #If file exist add file data to leaderboard
-      lb.CreateFromFile(f"{maps_directory}{listOfMaps[map]}.json", nicknames_path)
+      lb.CreateFromFile(f"{maps_directory}{listOfMaps[map]}.json")
       
       #If map is on steam Leaderboards, add to leaderboard group
       if listOfMaps[map] not in nonNative:
-        lb.CreateFromSteam(ids_path, nicknames_path, f"challenge_besttime_{listOfMaps[map]}")
+        lb.LoadSteamIDs(ids_path)
+        lb.CreateFromSteam(f"challenge_besttime_{listOfMaps[map]}")
         url = lb.SteamLeaderboardNumber()
         
       #Get Result and Order from Leaderboard Group
@@ -122,7 +126,7 @@ async def leaderboard(ctx, map=None, user:commands.MemberConverter=None):
       if listOfMaps[map] not in nonNative:
         
         #Get Steam Id's
-        ids = Utils.GetJson(ids_path)[str(ctx.guild.id)]
+        ids = Utils.LoadJson(ids_path)[str(ctx.guild.id)]
         
         #Get Leaderboard from Map
         lb = SteamLeaderboards.Leaderboard(620, f"challenge_besttime_{listOfMaps[map]}")
@@ -137,7 +141,7 @@ async def leaderboard(ctx, map=None, user:commands.MemberConverter=None):
       #If file exist add file data to result
       if os.path.exists(f"{maps_directory}{listOfMaps[map]}.json"):
           #Get Map and Score from file
-          score = Utils.GetJson(f"{maps_directory}{listOfMaps[map]}.json")[ctx.guild.id][user.name]
+          score = Utils.LoadJson(f"{maps_directory}{listOfMaps[map]}.json")[ctx.guild.id][user.name]
           #Set Result
           result = f"**{user.name}**'s score on **{map}** is **{score}**"
 
@@ -153,12 +157,12 @@ async def leaderboard(ctx, map=None, user:commands.MemberConverter=None):
 
   #If Exception was raised
   except Exception as e:
-    print(e)
+    Logger.Error(f"Unable to retrieve results due to fatal error: {e}")
     embed = discord.Embed(title=f"{e}", description=f"Unable to retrieve results due to fatal error: {e}", colour=discord.Colour(0x8d78b9))
     await preMsg.edit(content="An Error Occured:", embed=embed)
 
   toc = time.perf_counter()
-  print(f"Finished in {(toc - tic):0.4} Seconds")
+  Logger.Info(f"Finished in {(toc - tic):0.4} Seconds\n")
 
 #Sets Time for User in File
 @client.command(help="Sets a Time for a User", aliases=["settime"])
@@ -174,10 +178,10 @@ async def setTime(ctx, map, new_time, user:commands.MemberConverter=None):
     if not hasRequiredRoles:
       return
 
-  listOfMaps = Utils.GetJson(maps_path)
+  listOfMaps = Utils.LoadJson(maps_path)
   map = Utils.FindValueInArray(map, listOfMaps)    
 
-  js = Utils.GetJson(f"{maps_directory}{listOfMaps[map]}.json")
+  js = Utils.LoadJson(f"{maps_directory}{listOfMaps[map]}.json")
 
   if str(ctx.guild.id) not in js:
     js[str(ctx.guild.id)] = {}
@@ -216,7 +220,7 @@ async def setSteamId(ctx, id, user: commands.MemberConverter=None):
     if not hasRequiredRoles:
       return
 
-  new = Utils.GetJson(ids_path)
+  new = Utils.LoadJson(ids_path)
 
   if str(ctx.guild.id) not in new:
     new[str(ctx.guild.id)] = {}
@@ -252,7 +256,7 @@ async def setNickname(ctx, nickname, user:commands.MemberConverter=None):
     if not hasRequiredRoles:
       return
 
-  nicknames = Utils.GetJson(nicknames_path)
+  nicknames = Utils.LoadJson(nicknames_path)
 
   if str(ctx.guild.id) not in nicknames:
     nicknames[str(ctx.guild.id)] = {}
@@ -274,7 +278,7 @@ async def setNickname(ctx, nickname, user:commands.MemberConverter=None):
 #Spit out a random map
 @client.command(help="Spit out a random map", aliases=["choosemap", "map", "choose"])
 async def chooseMap(ctx, cont=None):
-  maps = Utils.GetJson(maps_path)
+  maps = Utils.LoadJson(maps_path)
   mapList = []
   
   if cont == "all" or cont == None:

@@ -1,6 +1,9 @@
 import os
 import json
 
+import Storage
+import Logger
+
 NoSettingsMessage = "Please Setup Bot to Continue!\n%setup [prefix you wish to use] [roles that can change others data]"
 RequiredRolesMessage = "You do not have any of the required roles!"
 
@@ -11,24 +14,37 @@ async def GetSettings(guild_id : int, ctx = None, error = True):
         
         return False
 
-    with open(f'Settings/{guild_id}.json', 'r') as f:
+    with open(f'{Storage.SettingsDirectory}{guild_id}.json', 'r') as f:
         return json.load(f)
 
 async def FindSettings(guild_id : int, ctx = None):
-    pathExists = os.path.exists(f'Settings/{guild_id}.json')
+    pathExists = os.path.exists(f'{Storage.SettingsDirectory}{guild_id}.json')
     if not pathExists and ctx:
         await ctx.send(NoSettingsMessage)
     
     return pathExists
 
-def GetJson(path):
-    js = {}
+def LoadJson(path):
+    data = {}
 
     if os.path.exists(path):
         with open(path, "r") as f:
-            js = json.load(f)
+            data = json.load(f)
+    else:
+        Logger.Warn(f"File {path} does not exist!")
+    
+    return data 
 
-    return js 
+def LoadJsonForGuild(path, guild_id : int):
+    data = LoadJson(path)
+    if not data:
+      return {}
+
+    if not str(guild_id) in data:
+      Logger.Warn(f"Guild ID was not found in file {path}")
+      return {}
+    
+    return data[str(guild_id)]
 
 def DumpJson(path, js):
     with open(path, "w") as f:

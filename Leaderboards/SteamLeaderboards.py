@@ -1,32 +1,35 @@
-import requests
-import json
-from bs4 import BeautifulSoup
-from colorama import Fore
-
 import os
+import json
+import requests
+from bs4 import BeautifulSoup
+
+import Logger
+import Utils
 
 class LeaderboardGroup():
   def __init__(self, app_id, guild_id):
     self.app_id = app_id
     self.guild_id = guild_id
+    self.leaderboardNumber = None
     self.data = []
-    self.steamNum = None
-    self.warnings = []
+    self.nicknames = {}
+    self.steamIDs = {}
 
-  def LoadFile(self, filename):
-    data = {}
-    if os.path.exists(filename):
-      with open(filename, "r") as f:
-        file = json.load(f)
+  def LoadNicknames(self, filename):
+    self.nicknames = Utils.LoadJsonForGuild(filename, self.guild_id)
+    
+  def LoadSteamIDs(self, filename):
+    self.steamIDs = Utils.LoadJsonForGuild(filename, self.guild_id)
 
-        if not str(self.guild_id) in file:
-          self.warnings.append(f"Guild ID was not found in file {filename}")
-        else:
-          data = file[str(self.guild_id)]
-    else:
-      self.warnings.append(f"File {filename} does not exist!")
+  def LoadUrl(self, url):
+    res = requests.get(url)
 
-    return data
+    try:
+      soup = BeautifulSoup(res.content, features="xml")
+      return soup
+    except:
+      Logger.Warn(f"Could not load url {url}")
+      return None
 
   def GetLBUrl(self, lbname):
     url = f"https://steamcommunity.com/stats/{self.app_id}/leaderboards/{lbname}?xml=1"
@@ -39,38 +42,27 @@ class LeaderboardGroup():
       if leaderboard.find("name").text == lbname:
         return leaderboard.url.text
 
-    self.warnings.append(f"Leaderboard {lbname} was not found")
+    Logger.Warn(f"Leaderboard {lbname} was not found")
     return None
   
-  def LoadUrl(self, url):
-    res = requests.get(url)
-
-    try:
-      soup = BeautifulSoup(res.content, features="xml")
-      return soup
-    except:
-      self.warnings.append(f"Could not load url {url}")
-      return None
-
-  def CreateFromSteam(self, id_file, nickname_file, lbname):
-    ids = self.LoadFile(id_file)
-    nicknames = self.LoadFile(nickname_file)
+  def CreateFromSteam(self, lbname):
     url = self.GetLBUrl(lbname)
     
     if url:
-      self.steamNum = url.split('/')[6]
+      self.leaderboardNumber = url.split('/')[6]
       
-    for name in ids:
-      if name not in nicknames:
-        nicknames[name] = name
+    for name in self.steamIDs:
+      if name not in self.nicknames:
+        self.nicknames[name] = name
 
       lb = Leaderboard(self.app_id, lbname)
-      entry = lb.GetEntry(ids[name], url)
+      entry = lb.GetEntry(self.steamIDs[name], url)
 
       if entry:
-        entry.SetName(nicknames[name])
+        entry.SetName(self.nicknames[name])
+        Logger.Info(f"Found entry on Steam Leaderboards: {name}")
       else:
-        self.warnings.append(f"Could not find entry {name} with id {ids[name]}")
+        Logger.Warn(f"Could not find entry {name} with id {self.steamIDs[name]}")
         continue
 
       found = False
@@ -83,20 +75,20 @@ class LeaderboardGroup():
       if not found:
         self.data.append(entry)
 
-  def CreateFromFile(self, filename, nickname_file):
-    file = self.LoadFile(filename)
-    nicknames = self.LoadFile(nickname_file)
-
-    if file == None:
-      self.warnings.append(f"Could not load file {filename}")
+  def CreateFromFile(self, filename):
+    file = Utils.LoadJsonForGuild(filename, self.guild_id)
+    
+    if not file:
+      Logger.Warn(f"Could not load file {filename}")
       return None
 
     for name in file:
-      if name not in nicknames:
-        nicknames[name] = name
+      if name not in self.nicknames:
+        self.nicknames[name] = name
       
-      entry = BasicEntry(nicknames[name], file[name], "Unknown")
-
+      entry = BasicEntry(self.nicknames[name], file[name], "Unknown")
+      Logger.Info(f"Found entry in file {filename}: {name}")
+      
       found = False
       for data in self.data:
         if entry.GetName() == data.GetName():
@@ -133,23 +125,15 @@ class LeaderboardGroup():
       result = result + page
       
     if not result: 
-      result = f"__Found {len(self.warnings)} Warnings:__"
-
-      for w in self.warnings:
-        result = result + "\n" + w
-
-    self.FlushWarnings()
+      result = Logger.GetWarnings()
+      
     return result
 
-  def FlushWarnings(self):
-    for warning in self.warnings:
-      print(f"{Fore.YELLOW}WARNING: " + warning + f"{Fore.WHITE}")
-    
   def GetData(self):
     return self.data
 
   def SteamLeaderboardNumber(self):
-    return self.steamNum
+    return self.leaderboardNumber
 
 class Leaderboard():
   def __init__(self, app_id, lbname):
@@ -167,7 +151,7 @@ class Leaderboard():
       if leaderboard.find("name").text == self.lbname:
         return leaderboard.url.text
 
-    self.warnings.append(f"Leaderboard {self.lbname} was not found")
+    Logger.Warn(f"Leaderboard {self.lbname} was not found")
     return None
   
   def LoadUrl(self, url):
@@ -176,7 +160,7 @@ class Leaderboard():
     try:
       soup = BeautifulSoup(res.content, features="xml")
     except:
-      self.warnings.append(f"Could not load url {url}")
+      Logger.Warn(f"Could not load url {url}")
       return None
 
     return soup
