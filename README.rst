@@ -44,7 +44,7 @@ QnA
 
 * How do I use Leaderboard bot?
 
-	* In order to access the commands just type in chat using an % and the name of the command. You must first enter your steam account id in order for the bot to update your scores. You can also use %help to bring up a list of commands
+	* In order to access the commands just type in chat using an % and the name of the command. You must first enter your steam account id in order for the bot access your scores. You can also use %help to bring up a list of commands
 
 
 * How do I set my Steam Account Id?
@@ -57,32 +57,25 @@ QnA
 
 	* You can find your id by heading to https://store.steampowered.com/account/ and logging in. You should find your id under `steam name` Account.
 
-
-* When does leaderboard bot update?
-
-	* Leaderboard bot updates every 24 hours at 6am GMT
-
-
 Commands
 -----------
 `%` prefix by default
 
-- time: 
-	Allows you to set and view 
-	%time {map name/code} {discord  user (optional)} {set new time (optional)}`
-- setSteamId:
-	Associates a steam id to discord user. This allows the bot to update the users leaderboard score
-	`%setSteamId {discord user/mention} {steam id}`
+- setup:
+	Setup the bot with custom settings. This must be done first before anything else
+	`%setup {prefix} [moderator roles]`
+- leaderboard: 
+	Allows you to view a leaderboard of times for a map or user
+	`%leaderboard [map (optional)] [discord user/mention (optional)]`
+- settime:
+	Set a users time on a specific map
+	`%settime {map} {new time} [discord user/mention (mod only)]`
+- setsteamid:
+	Associates a steam id to a discord user. This allows the bot to access the users leaderboard score on steam
+	`%setSteamId {steam id} [discord user/mention (mod only)] `
+- setnickname:
+	Associates a nickname to a discord user. A nickname will be used instead of a discord name
+	`%setNickname {nickname} [discord user/mention (mod only)]`
 - choosemap:
 	randomly selects a map
-	`%choosemap {singleplayer/native/category e.c.t}`
-- update:
-	Forces the bot to update all the leaderboard scores from the steam leaderboards
-	`%update {map name/code (optional)}`
-- startUpdating:
-	Starts a loop to have the update all scores
-- stopUpdating:
-	Stops the loop to have the bot update
-- reCheck:
-	Checks through everyone on the server and adds them to a list
-	
+	`%chooseMap [type (singleplayer/native/category e.c.t)]`

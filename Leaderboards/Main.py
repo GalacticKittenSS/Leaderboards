@@ -29,6 +29,7 @@ customHelp = CustomHelp.Help()
 #SetUp Bot
 client = commands.Bot(command_prefix=(get_prefix), intents=discord.Intents.all(), help_command=customHelp, activity=activity, status=discord.Status.online)
 
+#Directories/Paths
 maps_directory = Storage.MapsDirectory
 settings_directory = Storage.SettingsDirectory
 
@@ -36,9 +37,9 @@ maps_path = Storage.MapsPath
 nicknames_path = Storage.NicknamesPath
 ids_path = Storage.IDsPath
 
-#Maps Categories
+#Maps/Categories
 nonNative = Storage.NonNative
-category = Storage.Category
+categories = Storage.Categories
 coop = Storage.Coop
 
 #EVENTS
@@ -80,7 +81,7 @@ async def setup(ctx, prefix:str, *roles):
   await ctx.send(f"Setup Server with prefix {prefix} and mod roles {roles}!")
 
 #Gets and sets leaderboard time
-@client.command(help="Returns a Leaderboard of all known times", aliases=["getTime", "gettime", "Time", "time", "lb"])
+@client.command(help="View a leaderboard of times", aliases=["time", "lb"])
 async def leaderboard(ctx, map=None, user:commands.MemberConverter=None):
   if not await Utils.FindSettings(ctx.guild.id, ctx):
     return
@@ -165,8 +166,8 @@ async def leaderboard(ctx, map=None, user:commands.MemberConverter=None):
   Logger.Info(f"Finished in {(toc - tic):0.4} Seconds\n")
 
 #Sets Time for User in File
-@client.command(help="Sets a Time for a User", aliases=["settime"])
-async def setTime(ctx, map, new_time, user:commands.MemberConverter=None):
+@client.command(help="Set a users time on a specific map")
+async def settime(ctx, map, new_time, user:commands.MemberConverter=None):
   settings = await Utils.GetSettings(ctx.guild.id, ctx)
   if not settings:
     return
@@ -208,8 +209,8 @@ async def setTime(ctx, map, new_time, user:commands.MemberConverter=None):
   
 
 #Sets Member steam ID 
-@client.command(help= "Set your steam id", aliases=["steam", "setId", "id"])
-async def setSteamId(ctx, id, user: commands.MemberConverter=None):
+@client.command(help= "Set your steam id", aliases=["steam", "setid", "id"])
+async def setsteamid(ctx, id, user: commands.MemberConverter=None):
   if not await Utils.FindSettings(ctx.guild.id, ctx):
     return
   
@@ -233,7 +234,6 @@ async def setSteamId(ctx, id, user: commands.MemberConverter=None):
 @client.command()
 async def message(ctx, message):
   settings = await Utils.GetSettings(ctx.guild.id, ctx)
-  
   if not settings:
     return
     
@@ -244,7 +244,7 @@ async def message(ctx, message):
   Utils.DumpJson(f"Settings/{ctx.guild.id}.json", settings)
 
 @client.command()
-async def setNickname(ctx, nickname, user:commands.MemberConverter=None):
+async def setnickname(ctx, nickname, user:commands.MemberConverter=None):
   settings = await Utils.GetSettings(ctx.guild.id, ctx)
   if not settings:
     return
@@ -276,24 +276,24 @@ async def setNickname(ctx, nickname, user:commands.MemberConverter=None):
     await message.edit(content=result)
 
 #Spit out a random map
-@client.command(help="Spit out a random map", aliases=["choosemap", "map", "choose"])
-async def chooseMap(ctx, cont=None):
+@client.command(help="Spit out a random map", aliases=["map", "choose"])
+async def choosemap(ctx, cat_type=None):
   maps = Utils.LoadJson(maps_path)
   mapList = []
   
-  if cont == "all" or cont == None:
+  if not cat_type or cat_type == "all":
     mapList = maps
-  elif cont == "category":
-    mapList = category
-  elif cont == "coop":
+  elif cat_type == "category":
+    mapList = cat_type
+  elif cat_type == "coop":
     mapList = coop
   else:
     for map in maps:
-      if cont == "native" and maps[map] not in nonNative:
+      if cat_type == "native" and maps[map] not in nonNative:
         mapList.append(map)
-      elif cont == "maps" and maps[map] not in category:
+      elif cat_type == "maps" and maps[map] not in categories:
         mapList.append(map)
-      elif cont == "singleplayer" and maps[map] not in coop:
+      elif cat_type == "singleplayer" and maps[map] not in coop:
         mapList.append(map)
 
   await ctx.send(random.choice(mapList))
