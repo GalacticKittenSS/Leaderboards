@@ -13,8 +13,8 @@ class LeaderboardGroup():
     self.steamNum = None
     self.warnings = []
 
-  def loadFile(self, filename):
-    data = None
+  def LoadFile(self, filename):
+    data = {}
     if os.path.exists(filename):
       with open(filename, "r") as f:
         file = json.load(f)
@@ -28,9 +28,12 @@ class LeaderboardGroup():
 
     return data
 
-  def getLBUrl(self, lbname):
+  def GetLBUrl(self, lbname):
     url = f"https://steamcommunity.com/stats/{self.app_id}/leaderboards/{lbname}?xml=1"
-    soup = self.loadUrl(url)
+    soup = self.LoadUrl(url)
+
+    if not soup:
+      return None
 
     for leaderboard in soup.find_all("leaderboard"):
       if leaderboard.find("name").text == lbname:
@@ -39,46 +42,40 @@ class LeaderboardGroup():
     self.warnings.append(f"Leaderboard {lbname} was not found")
     return None
   
-  def loadUrl(self, url):
+  def LoadUrl(self, url):
     res = requests.get(url)
 
     try:
-      soup = BeautifulSoup(res.content, features="lxml")
+      soup = BeautifulSoup(res.content, features="xml")
       return soup
     except:
       self.warnings.append(f"Could not load url {url}")
       return None
 
-  def createFromSteam(self, id_file, nickname_file, lbname):
-    ids = self.loadFile(id_file)
-    nicknames = self.loadFile(nickname_file)
-    url = self.getLBUrl(lbname)
+  def CreateFromSteam(self, id_file, nickname_file, lbname):
+    ids = self.LoadFile(id_file)
+    nicknames = self.LoadFile(nickname_file)
+    url = self.GetLBUrl(lbname)
     
-    if url != None:
+    if url:
       self.steamNum = url.split('/')[6]
-
-    if ids == None:
-      return
-
+      
     for name in ids:
-      if nicknames == None:
-        nicknames = {}
-
       if name not in nicknames:
         nicknames[name] = name
 
       lb = Leaderboard(self.app_id, lbname)
-      entry = lb.getEntry(ids[name], url)
+      entry = lb.GetEntry(ids[name], url)
 
-      if entry != None:
-        entry.setName(nicknames[name])
+      if entry:
+        entry.SetName(nicknames[name])
       else:
         self.warnings.append(f"Could not find entry {name} with id {ids[name]}")
         continue
 
       found = False
       for data in self.data:
-        if entry.getName() == data.getName():
+        if entry.GetName() == data.GetName():
           self.data[self.data.index(data)] = entry
           found = True
           break
@@ -86,10 +83,9 @@ class LeaderboardGroup():
       if not found:
         self.data.append(entry)
 
-
-  def createFromFile(self, filename, nickname_file):
-    file = self.loadFile(filename)
-    nicknames = self.loadFile(nickname_file)
+  def CreateFromFile(self, filename, nickname_file):
+    file = self.LoadFile(filename)
+    nicknames = self.LoadFile(nickname_file)
 
     if file == None:
       self.warnings.append(f"Could not load file {filename}")
@@ -99,11 +95,11 @@ class LeaderboardGroup():
       if name not in nicknames:
         nicknames[name] = name
       
-      entry = basicEntry(nicknames[name], file[name], "Unknown")
+      entry = BasicEntry(nicknames[name], file[name], "Unknown")
 
       found = False
       for data in self.data:
-        if entry.getName() == data.getName():
+        if entry.GetName() == data.GetName():
           self.data[self.data.index(data)] = entry
           found = True
           break
@@ -111,51 +107,45 @@ class LeaderboardGroup():
       if not found:
         self.data.append(entry)
 
-  def sort(self, data):
+  def Sort(self, data):
     swapped = True
     while swapped:
       swapped = False 
       for i in range(len(data) - 1):
-         if data[i].getScore() > data[i + 1].getScore():
+         if data[i].GetScore() > data[i + 1].GetScore():
           data[i], data[i + 1] = data[i + 1], data[i]
           swapped = True
     return data
 
-  def getResult(self):
-    data = self.sort(self.data)
-    place = 1
-    result = None
-    previous = basicEntry("Previous", "0.0", "Unknown")
+  def GetResult(self):
+    data = self.Sort(self.data)
+    place = 0
+    result = ""
+    previous = BasicEntry("Previous", "0.0", "Unknown")
 
     for key in data:
-      if previous.getScore() == key.getScore():
-        place -= 1
+      if not previous.GetScore() == key.GetScore():
+        place += 1
         
-      page = f"#{place} - {key.getName()}: {key.getTime()}\n"
+      page = f"#{place} - {key.GetName()}: {key.GetTime()}\n"
       
-      place += 1
       previous.score = key.score
+      result = result + page
       
-      if result != None:
-        result = result + page
-      else:
-        result = page
-
-    if result == None: 
+    if not result: 
       result = f"__Found {len(self.warnings)} Warnings:__"
 
       for w in self.warnings:
         result = result + "\n" + w
 
-    self.flushWarnings()
-
+    self.FlushWarnings()
     return result
 
-  def flushWarnings(self):
+  def FlushWarnings(self):
     for warning in self.warnings:
       print(f"{Fore.YELLOW}WARNING: " + warning + f"{Fore.WHITE}")
     
-  def getData(self):
+  def GetData(self):
     return self.data
 
   def SteamLeaderboardNumber(self):
@@ -166,9 +156,12 @@ class Leaderboard():
     self.app_id = app_id
     self.lbname = lbname
 
-  def getLBUrl(self):
+  def GetLBUrl(self):
     url = f"https://steamcommunity.com/stats/{self.app_id}/leaderboards/{self.lbname}?xml=1"
-    soup = self.loadUrl(url)
+    soup = self.LoadUrl(url)
+
+    if not soup:
+      return None
 
     for leaderboard in soup.find_all("leaderboard"):
       if leaderboard.find("name").text == self.lbname:
@@ -177,24 +170,23 @@ class Leaderboard():
     self.warnings.append(f"Leaderboard {self.lbname} was not found")
     return None
   
-  def loadUrl(self, url):
+  def LoadUrl(self, url):
     res = requests.get(url)
 
     try:
-      soup = BeautifulSoup(res.content, features="lxml")
+      soup = BeautifulSoup(res.content, features="xml")
     except:
       self.warnings.append(f"Could not load url {url}")
-      
       return None
 
     return soup
 
-  def getEntry(self, steam_id, url:str=None):
-    if url != None:
-      url = self.getLBUrl()
+  def GetEntry(self, steam_id, url:str=None):
+    if url:
+      url = self.GetLBUrl()
 
     res = requests.get(url + f"&steamid={steam_id}")
-    soup = BeautifulSoup(res.content, features="lxml")
+    soup = BeautifulSoup(res.content, features="xml")
 
     for entry in soup.find_all("entry"):
       if entry.steamid.text == str(steam_id):
@@ -202,24 +194,22 @@ class Leaderboard():
     
     return None
 
-  def getUrl(self, *, steam_id=0):
-    url = self.load()
+  def GetUrl(self, *, steam_id=0):
+    url = self.GetLBUrl()
 
     if steam_id != 0:
       url = url + f"&steamid={steam_id}"
 
     return url
 
-class basicEntry():
+class BasicEntry():
   def __init__(self, name, score, rank):
     self.name = name
     self.score = score.replace(".", "")
     self.rank = rank
     self.time = score 
-     
 
-  def convertScore(self, score):
-
+  def ConvertScore(self, score):
     secs, ms = score[:len(score) - 2], score[len(score) - 2:]
     minutes = int(secs) // 60
     seconds = int(secs) % 60
@@ -236,25 +226,25 @@ class basicEntry():
 
     return tm
 
-  def setName(self, name):
+  def SetName(self, name):
     self.name = name
 
-  def getScore(self):
+  def GetScore(self):
     return self.score
 
-  def getTime(self):
+  def GetTime(self):
     return self.time
 
-  def getRank(self):
+  def GetRank(self):
     return self.rank
 
-  def getName(self):
+  def GetName(self):
     return self.name
 
-class Entry(basicEntry):
+class Entry(BasicEntry):
   def __init__(self, entry):
     self.steam_id = entry.steamid.text
     self.score = entry.score.text
-    self.time = self.convertScore(self.score)
+    self.time = self.ConvertScore(self.score)
     self.rank = entry.rank.text
     self.name = self.steam_id 

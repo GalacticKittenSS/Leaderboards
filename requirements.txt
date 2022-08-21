@@ -1,0 +1,7 @@
+python-dotenv==0.20.0
+discord.py==2.0.0
+Flask==2.2.2
+requests==2.25.1
+bs4==0.0.1
+colorama==0.4.5
+lxml==4.6.3

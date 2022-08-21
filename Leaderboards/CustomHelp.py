@@ -1,12 +1,13 @@
 import discord
 from discord.ext import commands
 
-import storage
 import os
 import json
 import itertools
 
-class CustomHelp(commands.DefaultHelpCommand):
+import Storage
+
+class Help(commands.DefaultHelpCommand):
   def __init__(self, **options):
     self.paginator = options.pop('paginator', None)
     
@@ -15,7 +16,6 @@ class CustomHelp(commands.DefaultHelpCommand):
       
     super().__init__(**options)
     self.paginator.__init__("", "")
-    
     
   def add_command_formatting(self, command):
     if command.description:
@@ -32,50 +32,49 @@ class CustomHelp(commands.DefaultHelpCommand):
           self.paginator.add_line(line)
         self.paginator.add_line()
 
-    
   async def send_pages(self, channel = None, message = None, allPages=False):
     if not allPages:
-        try:
-            destination = self.get_destination()
+      destination = self.get_destination()
+      
+      file = { "Help": {}}
+      if os.path.exists(f"Settings/{destination.guild.id}.json"):
+        file = json.load(open(f"Settings/{destination.guild.id}.json", "r"))
+      
+      for page in self.paginator.pages:
+          embed = discord.Embed(title="Help", description=page)
+          
+          if not message:
+            message = await destination.send(embed=embed)
+          
+          await message.edit(embed=embed)
+          
+          Storage.current_sorted_commands = page
+          Storage.current_help_commands.append(page)
 
-            file = json.load(open(f"Settings/{destination.guild.id}.json", "r"))
-            
-            for page in self.paginator.pages:
-                embed = discord.Embed(title="Help", description=page)
-                message = await destination.send(embed=embed)
-                
-                storage.current_sorted_commands = page
-                storage.current_help_commands.append(page)
-
-                file["Help"]["Message"] = message.id
-                file["Help"]["Channel"] = message.channel.id
-                file["Help"]["Index"] = -1
-        
-                await message.add_reaction("⏮️")
-                await message.add_reaction("⏭️")
-                
-            with open(f"Settings/{message.guild.id}.json", "w") as f:
-              json.dump(file, f, indent=2)
-        except:
-            for page in self.paginator.pages:
-                embed = discord.Embed(title="Help", description=page)
-                await message.edit(embed=embed)
-            
+          file["Help"]["Message"] = message.id
+          file["Help"]["Channel"] = message.channel.id
+          file["Help"]["Index"] = -1
+  
+          await message.add_reaction("⏮️")
+          await message.add_reaction("⏭️")
+          
+      with open(f"Settings/{message.guild.id}.json", "w") as f:
+        json.dump(file, f, indent=2)
     else:
-        page = storage.current_sorted_commands
+        page = Storage.current_sorted_commands
         embed = discord.Embed(title="Help", description=page)
         await message.edit(embed=embed)
     
     self.paginator.clear()
           
   async def send_bot_help(self, mapping):
-    sorted = await super().filter_commands(storage.client.commands, sort=True)
+    sorted = await super().filter_commands(Storage.Client.commands, sort=True)
     sorted = itertools.groupby(sorted)
 
-    storage.current_help_commands = []
+    Storage.current_help_commands = []
 
     for command, category in sorted:
-      storage.current_help_commands.append(command)
+      Storage.current_help_commands.append(command)
 
     await super().send_bot_help(mapping)
   
@@ -91,7 +90,6 @@ class CustomHelp(commands.DefaultHelpCommand):
         self.paginator.close_page()
     
     await self.send_pages(channel, message, allPages)
-
 
   async def send_command_help(self, command):
     self.add_command_formatting(command)
@@ -110,7 +108,7 @@ class CustomHelp(commands.DefaultHelpCommand):
     channel = client.get_channel(file["Help"]["Channel"])
     message = await channel.fetch_message(file["Help"]["Message"])
 
-    commands = storage.current_help_commands
+    commands = Storage.current_help_commands
     index = file["Help"]["Index"]
 
     if payload.emoji.name == "⏭️":
