@@ -3,7 +3,6 @@ from discord.ext import commands
 
 import os
 import time
-import json
 import random
 
 import Alive
@@ -203,7 +202,7 @@ async def settime(ctx, map, new_time, user:commands.MemberConverter=None):
     result = lb.getResult()
 
     
-    pbList = json.load(open(f"Settings/{ctx.guild.id}.json", "r"))["PBList"]
+    pbList = Utils.LoadJson(f"Settings/{ctx.guild.id}.json")["PBList"]
     message = await client.get_channel(pbList["Channel"]).fetch_message(pbList["Message"])
     await message.edit(content=result)
   
@@ -280,23 +279,29 @@ async def setnickname(ctx, nickname, user:commands.MemberConverter=None):
 async def choosemap(ctx, cat_type=None):
   maps = Utils.LoadJson(maps_path)
   mapList = []
-  
-  if not cat_type or cat_type == "all":
-    mapList = maps
-  elif cat_type == "category":
-    mapList = cat_type
-  elif cat_type == "coop":
+
+  if not cat_type:
+    cat_type = "All"
+
+  if cat_type.lower() == "nonnative":
+    mapList = nonNative
+  if cat_type.lower() == "category":
+    mapList = categories
+  elif cat_type.lower() == "coop":
     mapList = coop
   else:
-    for map in maps:
-      if cat_type == "native" and maps[map] not in nonNative:
-        mapList.append(map)
-      elif cat_type == "maps" and maps[map] not in categories:
-        mapList.append(map)
-      elif cat_type == "singleplayer" and maps[map] not in coop:
-        mapList.append(map)
-
-  await ctx.send(random.choice(mapList))
+    for (key, val) in maps.items():
+      if cat_type.lower() == "all":
+        mapList.append(val)
+      elif cat_type.lower() == "native" and val not in nonNative:
+        mapList.append(val)
+      elif cat_type.lower() == "maps" and val not in categories:
+        mapList.append(val)
+      elif cat_type.lower() == "singleplayer" and val not in coop:
+        mapList.append(val)
+  
+  choice = random.choice(mapList)
+  await ctx.send(f"{Utils.FindValueInArray(choice, maps)} ({choice}) has been selected from {cat_type}.")
 
 #START
 Storage.Client = client
