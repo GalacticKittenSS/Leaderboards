@@ -28,8 +28,5 @@ Coop = ["mp_coop_doors", "mp_coop_race_2", "mp_coop_laser_2", "mp_coop_rat_maze"
 pbChannel = 0
 pbMessage = 0
 
-#Help message storage
-current_help_message = []
-current_help_commands = []
-current_help_index = []
-current_sorted_commands = []
+#Help
+help_commands = {}
