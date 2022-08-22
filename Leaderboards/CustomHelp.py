@@ -6,9 +6,48 @@ import json
 import itertools
 
 import Storage
-import Utils
+
+class HelpView(discord.ui.View):
+  def __init__(self, custom_help, allCommands):
+    self.HelpClass = custom_help
+    self.Index = -1
+    self.Commands = custom_help.next_commands
+    self.AllCommands = allCommands
+    super().__init__()
+    
+  async def ChangeIndex(self, interaction):
+    if interaction.user.id == Storage.Client.user.id:
+      return
+
+    if self.Index >= len(self.Commands):
+      self.Index = 0
+    
+    if self.Index < 0:
+      self.Index = len(self.Commands) - 1
+    
+    all = None
+    if not (self.Index < len(self.Commands) - 1 and self.Index >= 0):
+      all = self.AllCommands
+    
+    command = None
+    if (not all):
+      command=self.Commands[self.Index]
+    
+    await self.HelpClass.send_next_help(channel=interaction.channel, message=interaction.message, allCommands=all, command=command)
+
+  @discord.ui.button(label="Previous", style=discord.ButtonStyle.primary, emoji="⏮️")
+  async def Previous(self, interaction, button):
+    self.Index -= 1
+    await self.ChangeIndex(interaction)
+  
+  @discord.ui.button(label="Next", style=discord.ButtonStyle.primary, emoji="⏭️")
+  async def Next(self, interaction, button):
+    self.Index += 1
+    await self.ChangeIndex(interaction)
 
 class Help(commands.DefaultHelpCommand):
+  next_commands = []
+
   def __init__(self, **options):
     self.paginator = options.pop('paginator', None)
     
@@ -33,39 +72,22 @@ class Help(commands.DefaultHelpCommand):
           self.paginator.add_line(line)
         self.paginator.add_line()
 
-  async def send_pages(self, channel = None, message = None, allCommands=False):
+  async def send_pages(self, channel = None, message = None, allCommands=None):
     if not allCommands:
       if not channel:
         channel = self.get_destination()
 
-      file = Utils.LoadJson(f"{Storage.SettingsDirectory}{channel.guild.id}.json")
-      if not file:
-        file["Help"] = {}
-      
       for page in self.paginator.pages:
         embed = discord.Embed(title="Help", description=page)
         
         if not message:
-          message = await channel.send(embed=embed)
-          file["Help"]["All_Commands_Message"] = page
-         
+          message = await channel.send(embed=embed, view=HelpView(self, page))
+      
         await message.edit(embed=embed)
       
-      if message:
-        file["Help"]["Message"] = message.id
-        file["Help"]["Channel"] = message.channel.id
-        file["Help"]["Index"] = -1
-
-        await message.add_reaction("⏮️")
-        await message.add_reaction("⏭️")
-      
-      Utils.DumpJson(f"{Storage.SettingsDirectory}{message.guild.id}.json", file)
     elif message:
-      file = Utils.LoadJson(f"{Storage.SettingsDirectory}{message.guild.id}.json")
-      if file:
-        page = file["Help"]["All_Commands_Message"]
-        embed = discord.Embed(title="Help", description=page)
-        await message.edit(embed=embed)
+      embed = discord.Embed(title="Help", description=allCommands)
+      await message.edit(embed=embed)
   
     self.paginator.clear()
           
@@ -73,10 +95,9 @@ class Help(commands.DefaultHelpCommand):
     sorted = await super().filter_commands(Storage.Client.commands, sort=True)
     sorted = itertools.groupby(sorted)
 
-    destination = self.get_destination()
-    Storage.help_commands[destination.guild.id] = []
+    self.next_commands = []
     for command, category in sorted:
-      Storage.help_commands[destination.guild.id].append(command)
+      self.next_commands.append(command)
 
     await super().send_bot_help(mapping)
   
@@ -86,7 +107,7 @@ class Help(commands.DefaultHelpCommand):
   async def send_group_help(self, group):
     await super().send_group_help(group)
     
-  async def send_next_help(self, channel, message, allCommands=False, command = None):
+  async def send_next_help(self, channel, message, allCommands=None, command=None):
     if not allCommands:
         self.add_command_formatting(command)
         self.paginator.close_page()
@@ -97,44 +118,6 @@ class Help(commands.DefaultHelpCommand):
     self.add_command_formatting(command)
     self.paginator.close_page()
     await self.send_pages()
-
-  async def reaction(self, client, payload):
-    file = Utils.LoadJson(f"Settings/{payload.guild_id}.json")
-    if not file:
-      return
-
-    if payload.user_id == client.user.id or payload.message_id != file["Help"]["Message"]:
-      return
-
-    channel = client.get_channel(file["Help"]["Channel"])
-    message = await channel.fetch_message(file["Help"]["Message"])
-
-    commands = Storage.help_commands[message.guild.id]
-    index = file["Help"]["Index"]
-
-    if payload.emoji.name == "⏭️":
-        index += 1
-    if payload.emoji.name == "⏮️":
-        index -= 1
-
-    if index >= len(commands):
-        index = 0
-    
-    if index < 0:
-        index = len(commands) - 1
-
-    await message.remove_reaction("⏭️", client.get_user(payload.user_id))
-    await message.remove_reaction("⏮️", client.get_user(payload.user_id))
-
-    file["Help"]["Index"] = index
-
-    Utils.DumpJson(f"{Storage.SettingsDirectory}{payload.guild_id}.json", file)
-    
-    all = not (index < len(commands) - 1 and index >= 0)
-    command = None
-    if (not all):
-      command=commands[index]
-    await self.send_next_help(channel=channel, message=message, allCommands=all, command=command)
 
 def get_command_signature(command):
     parent = command.parent

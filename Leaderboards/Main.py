@@ -47,11 +47,6 @@ coop = Storage.Coop
 async def on_ready():
   Logger.Info(f"Logged in as {client.user}.")
 
-#Update Help List
-@client.event
-async def on_raw_reaction_add(payload):
-  await customHelp.reaction(client, payload)
-
 #COMMANDS
 @client.command()
 async def setup(ctx, prefix:str, *roles):
@@ -62,20 +57,13 @@ async def setup(ctx, prefix:str, *roles):
       return
 
   file = {}
-  
   file["Prefix"] = prefix
-  
   file["Roles"] = roles
   
   file["PBList"] = { }
   file["PBList"]["Channel"] = ""
   file["PBList"]["Message"] = ""
   
-  file["Help"] = { }
-  file["Help"]["Channel"] = ""
-  file["Help"]["Message"] = ""
-  file["Help"]["Index"] = -1
-
   Utils.DumpJson(f"{settings_directory}{ctx.guild.id}.json", file)
   await ctx.send(f"Setup Server with prefix {prefix} and mod roles {roles}!")
 
