@@ -17,7 +17,7 @@ Installing the Bot
 -----------
 
 1. Head to `Leaderboard Bot
-<https://discord.com/api/oauth2/authorize?client_id=862608581119180811&permissions=75840&scope=bot>`_
+<https://discord.com/api/oauth2/authorize?client_id=870359095218155610&permissions=274877975552&scope=bot%20applications.commands>`_
 
 2. Select Sever you wish to add it to.
 
