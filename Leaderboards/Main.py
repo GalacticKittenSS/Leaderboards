@@ -12,7 +12,7 @@ import CustomHelp
 import Utils
 import Logger
 
-#SetUp
+#Setup Bot
 async def get_prefix(client, message):
   settings = await Utils.GetSettings(message.guild.id)
   prefix = "%"
@@ -24,10 +24,10 @@ async def get_prefix(client, message):
 
 activity = discord.Game(name="Now Using discord.py 2.0", type=3)
 customHelp = CustomHelp.Help()
+intents = discord.Intents.default()
 
-#SetUp Bot
-client = commands.Bot(command_prefix=(get_prefix), intents=discord.Intents.all(), help_command=customHelp, activity=activity, status=discord.Status.online)
-client.sync_tree = False #Only sync if changes have been made to hybrid commands 
+client = commands.Bot(command_prefix=(get_prefix), intents=intents, help_command=customHelp, activity=activity, status=discord.Status.online)
+client.sync_tree = True #Only sync if changes have been made to hybrid commands 
 
 #Directories/Paths
 maps_directory = Storage.MapsDirectory
@@ -168,8 +168,8 @@ async def leaderboard(ctx, map=None, user:commands.MemberConverter=None):
     await preMsg.edit(content=content, embed=embed)
 
 #Sets Time for User in File
-@client.hybrid_command(help="Set a users time on a specific map", alias=["settime"])
-async def time(ctx, map, new_time, user:commands.MemberConverter=None):
+@client.hybrid_command(name="time", help="Set a users time on a specific map", alias=["settime"])
+async def settime(ctx, map, new_time, user:commands.MemberConverter=None):
   settings = await Utils.GetSettings(ctx.guild.id, ctx)
   if not settings:
     return
