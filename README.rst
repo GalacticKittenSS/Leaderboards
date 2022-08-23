@@ -13,7 +13,7 @@ Using discord.py
    
 A modern, easy to use, feature-rich, and async ready API wrapper for Discord written in Python.
 
-Installation
+Installing the Bot
 -----------
 
 1. Head to `Leaderboard Bot
@@ -22,6 +22,14 @@ Installation
 2. Select Sever you wish to add it to.
 
 3. Head to the Server and type `%setup [prefix you wish to use] [roles that can change others data]`
+
+Installing the repositry
+-----------
+1. Clone the github repositry using `git clone https://github.com/Leaderboards`. The repositry contains no submodules so `--recursive` will not be needed
+
+2. Setup the repositry by using `pip install -r requirements.txt`. You can also use `Scripts/Setup.bat` to initialise the project. 
+
+3. To run the scripts you can either use `python Leaderboards/Main.py` or run `Scripts/Start.bat` to start.
 
 QnA
 -----------
