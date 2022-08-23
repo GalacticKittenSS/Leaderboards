@@ -27,6 +27,7 @@ customHelp = CustomHelp.Help()
 
 #SetUp Bot
 client = commands.Bot(command_prefix=(get_prefix), intents=discord.Intents.all(), help_command=customHelp, activity=activity, status=discord.Status.online)
+client.sync_tree = False #Only sync if changes have been made to hybrid commands 
 
 #Directories/Paths
 maps_directory = Storage.MapsDirectory
@@ -45,16 +46,22 @@ coop = Storage.Coop
 #On Bot Ready
 @client.event
 async def on_ready():
+  if client.sync_tree:
+    Logger.Info("Syncing Bot Tree...")
+    await client.tree.sync()
+  
   Logger.Info(f"Logged in as {client.user}.")
 
 #COMMANDS
-@client.command()
-async def setup(ctx, prefix:str, *roles):
+@client.hybrid_command(help="Setup the bot with custom settings (Moderators Only)")
+async def setup(ctx, prefix:str, *, roles):
   settings = await Utils.GetSettings(ctx.guild.id, ctx, False)
 
   if settings:
     if not await Utils.UserHasRequiredRoles(settings["Roles"], ctx.author, ctx):
       return
+
+  roles = roles.split(", ")
 
   file = {}
   file["Prefix"] = prefix
@@ -68,15 +75,18 @@ async def setup(ctx, prefix:str, *roles):
   await ctx.send(f"Setup Server with prefix {prefix} and mod roles {roles}!")
 
 #Gets and sets leaderboard time
-@client.command(help="View a leaderboard of times", aliases=["time", "lb"])
+@client.hybrid_command(help="View a leaderboard of times", aliases=["lb"])
 async def leaderboard(ctx, map=None, user:commands.MemberConverter=None):
+  await ctx.defer()
+  
   if not await Utils.FindSettings(ctx.guild.id, ctx):
     return
-    
-  tic = time.perf_counter()
   
-  #await ctx.message.delete()
-  preMsg = await ctx.send("Getting Leaderboards...")
+  preMsg = None
+  if ctx.prefix != "/":
+    preMsg = await ctx.reply("Getting Leaderboards...")
+  
+  tic = time.perf_counter()
   Logger.Info("Getting Leaderboards...")
 
   listOfMaps = Utils.LoadJson(maps_path)
@@ -133,28 +143,32 @@ async def leaderboard(ctx, map=None, user:commands.MemberConverter=None):
           #Set Result
           result = f"**{user.name}**'s score on **{map}** is **{score}**"
 
+    content = "Showing Results:"
     if url:
       #If we manage to get URL of map
       embed = discord.Embed(title=f"{map}", description=result, colour=discord.Colour(0x8d78b9), url=f"https://board.portal2.sr/chamber/{url}")
     else:
       #If we don't manage to get URL of map
       embed = discord.Embed(title=f"{map}", description=result, colour=discord.Colour(0x8d78b9))
-    
-    #Show Resultss by editing message
-    await preMsg.edit(content="Showing Results:", embed=embed)
-
+   
   #If Exception was raised
   except Exception as e:
     Logger.Error(f"Unable to retrieve results due to fatal error: {e}")
     embed = discord.Embed(title=f"{e}", description=f"Unable to retrieve results due to fatal error: {e}", colour=discord.Colour(0x8d78b9))
-    await preMsg.edit(content="An Error Occured:", embed=embed)
+    content = "An Error Occured:"
 
   toc = time.perf_counter()
   Logger.Info(f"Finished in {(toc - tic):0.4} Seconds\n")
-
+  
+  #Show Results
+  if not preMsg:
+    await ctx.reply(content=content, embed=embed)
+  else:
+    await preMsg.edit(content=content, embed=embed)
+  
 #Sets Time for User in File
-@client.command(help="Set a users time on a specific map")
-async def settime(ctx, map, new_time, user:commands.MemberConverter=None):
+@client.hybrid_command(help="Set a users time on a specific map", alias=["settime"])
+async def time(ctx, map, new_time, user:commands.MemberConverter=None):
   settings = await Utils.GetSettings(ctx.guild.id, ctx)
   if not settings:
     return
@@ -177,9 +191,9 @@ async def settime(ctx, map, new_time, user:commands.MemberConverter=None):
   js[str(ctx.guild.id)][user.name] = new_time
 
   Utils.DumpJson(f"{maps_directory}{listOfMaps[map]}.json", js)
-
   await ctx.send(f"{user.name}'s' new time is **{new_time}**")
   
+  # Edit PB List
   if listOfMaps[map] == "singleplayer":
     lb = SteamLeaderboards.LeaderboardGroup(620, ctx.guild.id)
     
@@ -196,8 +210,8 @@ async def settime(ctx, map, new_time, user:commands.MemberConverter=None):
   
 
 #Sets Member steam ID 
-@client.command(help= "Set your steam id", aliases=["steam", "setid", "id"])
-async def setsteamid(ctx, id, user: commands.MemberConverter=None):
+@client.hybrid_command(help= "Set your steam id", aliases=["setsteamid", "setid", "id"])
+async def steamid(ctx, id, user: commands.MemberConverter=None):
   if not await Utils.FindSettings(ctx.guild.id, ctx):
     return
   
@@ -216,9 +230,9 @@ async def setsteamid(ctx, id, user: commands.MemberConverter=None):
   new[str(ctx.guild.id)][user.name] = str(id)
   
   Utils.DumpJson(ids_path, new)
-  await ctx.send(f"Set Steam Id for {user.name}")
+  await ctx.reply(f"Set Steam Id for {user.name}")
 
-@client.command()
+@client.hybrid_command(help="Creates personal best temporary message (Moderator Only)")
 async def message(ctx, message):
   settings = await Utils.GetSettings(ctx.guild.id, ctx)
   if not settings:
@@ -230,8 +244,8 @@ async def message(ctx, message):
 
   Utils.DumpJson(f"Settings/{ctx.guild.id}.json", settings)
 
-@client.command()
-async def setnickname(ctx, nickname, user:commands.MemberConverter=None):
+@client.hybrid_command(help="Set your leaderboard nickname", alias=["setnickname"])
+async def nickname(ctx, nickname, user:commands.MemberConverter=None):
   settings = await Utils.GetSettings(ctx.guild.id, ctx)
   if not settings:
     return
@@ -251,9 +265,9 @@ async def setnickname(ctx, nickname, user:commands.MemberConverter=None):
   nicknames[str(ctx.guild.id)][user.name] = nickname
 
   Utils.DumpJson(nicknames_path, nicknames)
+  await ctx.reply(content=f"Set {user.name}'s nickname to {nickname}")
 
-  await ctx.send(content=f"Set {user.name}'s nickname to {nickname}")
-
+  # Edit PB Message
   if os.path.exists(F"{maps_directory}singleplayer.json") and ctx.guild.id == 772972878106198028:
     lb = SteamLeaderboards.LeaderboardGroup(620, ctx.guild.id)
     lb.CreateFromFile(f"{maps_directory}singleplayer.json", nicknames_path)
@@ -263,7 +277,7 @@ async def setnickname(ctx, nickname, user:commands.MemberConverter=None):
     await message.edit(content=result)
 
 #Spit out a random map
-@client.command(help="Spit out a random map", aliases=["map", "choose"])
+@client.hybrid_command(help="Spit out a random map", aliases=["map", "choose"])
 async def choosemap(ctx, cat_type=None):
   maps = Utils.LoadJson(maps_path)
   mapList = []
@@ -289,7 +303,7 @@ async def choosemap(ctx, cat_type=None):
         mapList.append(val)
   
   choice = random.choice(mapList)
-  await ctx.send(f"{Utils.FindValueInArray(choice, maps)} ({choice}) has been selected from {cat_type}.")
+  await ctx.reply(f"{Utils.FindValueInArray(choice, maps)} ({choice}) has been selected from {cat_type}.")
 
 #START
 Storage.Client = client
