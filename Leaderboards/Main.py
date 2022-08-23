@@ -27,7 +27,7 @@ customHelp = CustomHelp.Help()
 intents = discord.Intents.default()
 
 client = commands.Bot(command_prefix=(get_prefix), intents=intents, help_command=customHelp, activity=activity, status=discord.Status.online)
-client.sync_tree = True #Only sync if changes have been made to hybrid commands 
+client.sync_tree = False #Only sync if changes have been made to hybrid commands 
 
 #Directories/Paths
 maps_directory = Storage.MapsDirectory
@@ -197,18 +197,13 @@ async def settime(ctx, map, new_time, user:commands.MemberConverter=None):
   # Edit PB List
   if listOfMaps[map] == "singleplayer":
     lb = SteamLeaderboards.LeaderboardGroup(620, ctx.guild.id)
-    
-    if not os.path.exists(nicknames_path):
-      Utils.DumpJson(nicknames_path, {f"{ctx.guild.id}": {}})
+    lb.LoadNicknames(nicknames_path)
+    lb.CreateFromFile(f"{maps_directory}singleplayer.json")
+    result = lb.GetResult()
 
-    lb.CreateFromFile(f"{maps_directory}singleplayer.json", nicknames_path)
-    result = lb.getResult()
-
-    
     pbList = Utils.LoadJson(f"Settings/{ctx.guild.id}.json")["PBList"]
     message = await client.get_channel(pbList["Channel"]).fetch_message(pbList["Message"])
     await message.edit(content=result)
-  
 
 #Sets Member steam ID 
 @client.hybrid_command(help= "Set your steam id", aliases=["setsteamid", "setid", "id"])
@@ -269,12 +264,14 @@ async def nickname(ctx, nickname, user:commands.MemberConverter=None):
   await ctx.reply(content=f"Set {user.name}'s nickname to {nickname}")
 
   # Edit PB Message
-  if os.path.exists(F"{maps_directory}singleplayer.json") and ctx.guild.id == 772972878106198028:
+  if os.path.exists(F"{maps_directory}singleplayer.json"):
     lb = SteamLeaderboards.LeaderboardGroup(620, ctx.guild.id)
-    lb.CreateFromFile(f"{maps_directory}singleplayer.json", nicknames_path)
+    lb.LoadNicknames(nicknames_path)
+    lb.CreateFromFile(f"{maps_directory}singleplayer.json")
     result = lb.GetResult()
 
-    message = await client.get_channel(Storage.pbChannel).fetch_message(Storage.pbMessage)
+    pbList = Utils.LoadJson(f"Settings/{ctx.guild.id}.json")["PBList"]
+    message = await client.get_channel(pbList["Channel"]).fetch_message(pbList["Message"])
     await message.edit(content=result)
 
 #Spit out a random map
