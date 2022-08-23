@@ -25,6 +25,7 @@ async def get_prefix(client, message):
 activity = discord.Game(name="Now Using discord.py 2.0", type=3)
 customHelp = CustomHelp.Help()
 intents = discord.Intents.default()
+intents.message_content = True
 
 client = commands.Bot(command_prefix=(get_prefix), intents=intents, help_command=customHelp, activity=activity, status=discord.Status.online)
 client.sync_tree = False #Only sync if changes have been made to hybrid commands 
