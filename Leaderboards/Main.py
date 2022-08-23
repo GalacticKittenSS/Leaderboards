@@ -49,6 +49,7 @@ async def on_ready():
   if client.sync_tree:
     Logger.Info("Syncing Bot Tree...")
     await client.tree.sync()
+    client.sync_tree = False
   
   Logger.Info(f"Logged in as {client.user}.")
 
@@ -165,7 +166,7 @@ async def leaderboard(ctx, map=None, user:commands.MemberConverter=None):
     await ctx.reply(content=content, embed=embed)
   else:
     await preMsg.edit(content=content, embed=embed)
-  
+
 #Sets Time for User in File
 @client.hybrid_command(help="Set a users time on a specific map", alias=["settime"])
 async def time(ctx, map, new_time, user:commands.MemberConverter=None):
