@@ -1,10 +1,6 @@
-/[Ll]eaderboards/
-/[Ss]ettings/
-/__pycache__/
-
-/pb_list.json
-/steam_id.json
-/nicknames.json
+Settings/
+Maps/
+*/__pycache__/
 
 .breakpoints
 .env
