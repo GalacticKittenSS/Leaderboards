@@ -5,8 +5,9 @@ import os
 import time
 import random
 
+import FierceLeopard
+
 import Alive
-import SteamLeaderboards
 import Storage
 import CustomHelp
 import Utils
@@ -104,21 +105,22 @@ async def leaderboard(ctx, map=None, user:commands.MemberConverter=None):
     if not user:
       #Get General Results for Specific Map
 
-      #Load Leaderboard
-      lb = SteamLeaderboards.LeaderboardGroup(620, ctx.guild.id)
-      lb.LoadNicknames(nicknames_path)
-
+      #Load App Ranker
+      ranker = FierceLeopard.AppRanker(620)
+      ranker.nicknames = Utils.LoadJsonForGuild(nicknames_path, ctx.guild.id)
       #If file exist add file data to leaderboard
-      lb.CreateFromFile(f"{maps_directory}{listOfMaps[map]}.json")
+      filename = f"{maps_directory}{listOfMaps[map]}.json"
+      file = Utils.LoadJsonForGuild(filename, ctx.guild.id)
+      ranker.LoadDict(file, filename)
       
-      #If map is on steam Leaderboards, add to leaderboard group
+      #If map is on steam Leaderboards, add to App Ranker
       if listOfMaps[map] not in nonNative:
-        lb.LoadSteamIDs(ids_path)
-        lb.CreateFromSteam(f"challenge_besttime_{listOfMaps[map]}")
-        url = lb.SteamLeaderboardNumber()
+        ranker.steam_ids = Utils.LoadJsonForGuild(ids_path, ctx.guild.id)
+        ranker.LoadLeaderboard(f"challenge_besttime_{listOfMaps[map]}")
+        url = ranker.leaderboard_number
         
-      #Get Result and Order from Leaderboard Group
-      result = lb.GetResult()
+      #Get Result and Order from App Ranker
+      result = ranker.GetResult()
     else:
       #Get User Specific Result
 
@@ -126,24 +128,24 @@ async def leaderboard(ctx, map=None, user:commands.MemberConverter=None):
       if listOfMaps[map] not in nonNative:
         
         #Get Steam Id's
-        ids = Utils.LoadJson(ids_path)[str(ctx.guild.id)]
+        ids = Utils.LoadJsonForGuild(ids_path, ctx.guild.id)
         
         #Get Leaderboard from Map
-        lb = SteamLeaderboards.Leaderboard(620, f"challenge_besttime_{listOfMaps[map]}")
+        lb = FierceLeopard.Leaderboard(620, f"challenge_besttime_{listOfMaps[map]}")
         
         #Find and Get Entry
-        score = lb.GetEntry(ids[user.name])
+        entry = lb.GetEntry(ids[user.name])
         
         #Set Result
         url = lb.GetUrl().split('/')[6]
-        result = f"**{user.name}**'s score on **{map}** is **{score.getTime()}**\n and is placed **#{score.getRank()}** on Steam leaderboards"
+        result = f"**{user.name}**'s score on **{map}** is **{entry.time}**\n and is placed **#{entry.rank}** on Steam leaderboards"
       
       #If file exist add file data to result
       if os.path.exists(f"{maps_directory}{listOfMaps[map]}.json"):
-          #Get Map and Score from file
-          score = Utils.LoadJson(f"{maps_directory}{listOfMaps[map]}.json")[ctx.guild.id][user.name]
-          #Set Result
-          result = f"**{user.name}**'s score on **{map}** is **{score}**"
+        #Get Map and Score from file
+        score = Utils.LoadJsonForGuild(f"{maps_directory}{listOfMaps[map]}.json", ctx.guild.id)[user.name]
+        #Set Result
+        result = f"**{user.name}**'s score on **{map}** is **{score}**"
 
     content = "Showing Results:"
     if url:
@@ -197,14 +199,7 @@ async def settime(ctx, map, new_time, user:commands.MemberConverter=None):
   
   # Edit PB List
   if listOfMaps[map] == "singleplayer":
-    lb = SteamLeaderboards.LeaderboardGroup(620, ctx.guild.id)
-    lb.LoadNicknames(nicknames_path)
-    lb.CreateFromFile(f"{maps_directory}singleplayer.json")
-    result = lb.GetResult()
-
-    pbList = Utils.LoadJson(f"Settings/{ctx.guild.id}.json")["PBList"]
-    message = await client.get_channel(pbList["Channel"]).fetch_message(pbList["Message"])
-    await message.edit(content=result)
+    await Utils.EditPBMesage()
 
 #Sets Member steam ID 
 @client.hybrid_command(help= "Set your steam id", aliases=["setsteamid", "setid", "id"])
@@ -230,7 +225,7 @@ async def steamid(ctx, id, user: commands.MemberConverter=None):
   await ctx.reply(f"Set Steam Id for {user.name}")
 
 @client.hybrid_command(help="Creates personal best temporary message (Moderator Only)")
-async def message(ctx, message):
+async def message(ctx):
   settings = await Utils.GetSettings(ctx.guild.id, ctx)
   if not settings:
     return
@@ -240,6 +235,8 @@ async def message(ctx, message):
   settings["PBList"]["Message"] = msg.id
 
   Utils.DumpJson(f"Settings/{ctx.guild.id}.json", settings)
+
+  await Utils.EditPBMesage()
 
 @client.hybrid_command(help="Set your leaderboard nickname", alias=["setnickname"])
 async def nickname(ctx, nickname, user:commands.MemberConverter=None):
@@ -266,14 +263,7 @@ async def nickname(ctx, nickname, user:commands.MemberConverter=None):
 
   # Edit PB Message
   if os.path.exists(F"{maps_directory}singleplayer.json"):
-    lb = SteamLeaderboards.LeaderboardGroup(620, ctx.guild.id)
-    lb.LoadNicknames(nicknames_path)
-    lb.CreateFromFile(f"{maps_directory}singleplayer.json")
-    result = lb.GetResult()
-
-    pbList = Utils.LoadJson(f"Settings/{ctx.guild.id}.json")["PBList"]
-    message = await client.get_channel(pbList["Channel"]).fetch_message(pbList["Message"])
-    await message.edit(content=result)
+    await Utils.EditPBMesage()
 
 #Spit out a random map
 @client.hybrid_command(help="Spit out a random map", aliases=["map", "choose"])

@@ -1,6 +1,6 @@
 Settings/
 Maps/
-*/__pycache__/
+__pycache__/
 
 .breakpoints
 .env

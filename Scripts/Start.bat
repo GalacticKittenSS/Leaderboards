@@ -1,4 +1,4 @@
 @echo off
 cd ..
-python Leaderboards/Main.py
+python "Leopard Bot/Main.py"
 pause

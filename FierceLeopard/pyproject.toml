@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "FierceLeopard"
+version = "0.0.1"
+description = "Get and rank data from Steam and local files"
+authors = ["GalacticKittenSS <@GalacticKitten>"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+requests = "^2.25.1"
+bs4 = "^0.0.1"
+lxml = "^4.6.3"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
