@@ -1,26 +1,26 @@
 from datetime import datetime
 
-Warnings = []
-
 class Logger:
-  def Info(text):
-    now = datetime.now()
-    print(f"[{now.strftime('%Y-%m-%d %H:%M:%S')}] [INFO   ] {text}")
+  Warnings = []
 
-  def Warn(text):
+  def Info(self, text):
     now = datetime.now()
-    print(f"[{now.strftime('%Y-%m-%d %H:%M:%S')}] [WARNING] {text}")
-    Warnings.append(text)
+    print(f"[{now.strftime('%Y-%m-%d %H:%M:%S')}] [FierceLeopard] [INFO   ] {text}")
 
-  def Error(text):
+  def Warn(self, text):
     now = datetime.now()
-    print(f"[{now.strftime('%Y-%m-%d %H:%M:%S')}] [ERROR  ] {text}")
+    print(f"[{now.strftime('%Y-%m-%d %H:%M:%S')}] [FierceLeopard] [WARNING] {text}")
+    self.Warnings.append(text)
 
-  def GetWarnings():
-    result = f"__Found {len(Warnings)} Warnings:__"
+  def Error(self, text):
+    now = datetime.now()
+    print(f"[{now.strftime('%Y-%m-%d %H:%M:%S')}] [FierceLeopard] [ERROR  ] {text}")
+
+  def GetWarnings(self):
+    result = f"__Found {len(self.Warnings)} Warnings:__"
     
-    for w in Warnings:
+    for w in self.Warnings:
       result = result + "\n" + w
 
-    Warnings.clear()
+    self.Warnings.clear()
     return result

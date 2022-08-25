@@ -2,15 +2,15 @@ from datetime import datetime
 
 def Info(text):
   now = datetime.now()
-  print(f"[{now.strftime('%Y-%m-%d %H:%M:%S')}] [INFO   ] {text}")
+  print(f"[{now.strftime('%Y-%m-%d %H:%M:%S')}] [Leopard Bot] [INFO   ] {text}")
 
 def Warn(text):
   now = datetime.now()
-  print(f"[{now.strftime('%Y-%m-%d %H:%M:%S')}] [WARNING] {text}")
+  print(f"[{now.strftime('%Y-%m-%d %H:%M:%S')}] [Leopard Bot] [WARNING] {text}")
     
 def Error(text):
   now = datetime.now()
-  print(f"[{now.strftime('%Y-%m-%d %H:%M:%S')}] [ERROR  ] {text}")
+  print(f"[{now.strftime('%Y-%m-%d %H:%M:%S')}] [Leopard Bot] [ERROR  ] {text}")
 
 def GetWarnings():
   result = f"__Found {len(Warnings)} Warnings:__"

@@ -6,14 +6,14 @@ from bs4 import BeautifulSoup
 
 from .Logger import *
 
-def LoadJson(path):
+def LoadJson(path, logger = Logger()):
   data = {}
 
   if os.path.exists(path):
     with open(path, "r") as f:
       data = json.load(f)
   else:
-    Logger.Warn(f"File {path} does not exist!")
+    logger.Warn(f"File {path} does not exist!")
   
   return data 
 
@@ -31,13 +31,13 @@ def SortEntries(data):
         swapped = True
   return data
 
-def LoadUrl(url):
+def LoadUrl(url, logger = Logger()):
   res = requests.get(url)
 
   try:
     soup = BeautifulSoup(res.content, features="xml")
   except:
-    Logger.Warn(f"Could not load url {url}")
+    logger.Warn(f"Could not load url {url}")
     return None
 
   return soup

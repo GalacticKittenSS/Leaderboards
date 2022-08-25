@@ -2,7 +2,7 @@
 import time
 
 import FierceLeopard
-from FierceLeopard import Logger
+Logger = FierceLeopard.Logger()
 
 Logger.Info("Beginning Ranker Tests\n")
 

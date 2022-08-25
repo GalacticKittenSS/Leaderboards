@@ -7,14 +7,16 @@ from .Logger import *
 from .Utils import *
 
 from .Entry import SteamEntry
+from .Logger import Logger
 
 class Leaderboard:
-  def __init__(self, app_id, lbname):
+  def __init__(self, app_id, lbname, logger = Logger()):
+    self.Logger = logger
     self.url = self.LoadUrl(app_id, lbname)
-  
+    
   def LoadUrl(self, app_id, lbname):
     url = f"https://steamcommunity.com/stats/{app_id}/leaderboards/{lbname}?xml=1"
-    soup = LoadUrl(url)
+    soup = LoadUrl(url, self.Logger)
 
     if not soup:
       return
@@ -23,7 +25,7 @@ class Leaderboard:
       if leaderboard.find("name").text == lbname:
         return leaderboard.url.text
 
-    Logger.Warn(f"Leaderboard {lbname} was not found")
+    self.Logger.Warn(f"Leaderboard {lbname} was not found")
     return
   
   def GetEntry(self, steam_id):

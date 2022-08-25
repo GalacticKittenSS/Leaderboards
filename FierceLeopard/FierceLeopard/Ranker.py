@@ -8,6 +8,8 @@ from .Entry import Entry
 
 class AppRanker:
   def __init__(self, app_id):
+    self.Logger = Logger()
+
     self.app_id = app_id
     self.leaderboard_number = None
     
@@ -16,13 +18,13 @@ class AppRanker:
     self.steam_ids = {}
 
   def LoadNicknames(self, filename : str):
-    self.nicknames = LoadJson(filename)
+    self.nicknames = LoadJson(filename, self.Logger)
     
   def LoadSteamIDs(self, filename : str):
-    self.steam_ids = LoadJson(filename)
+    self.steam_ids = LoadJson(filename, self.Logger)
 
   def LoadLeaderboard(self, lbname : str):
-    lb = Leaderboard(self.app_id, lbname)
+    lb = Leaderboard(self.app_id, lbname, self.Logger)
     url = lb.GetUrl()
 
     if not url:
@@ -38,18 +40,18 @@ class AppRanker:
 
       if entry:
         entry.name = self.nicknames[name]
-        Logger.Info(f"Found entry on Steam Leaderboards: {name}")
+        self.Logger.Info(f"Found entry on Steam Leaderboards: {name}")
       else:
-        Logger.Warn(f"Could not find entry {name} with id {self.steam_ids[name]}")
+        self.Logger.Warn(f"Could not find entry {name} with id {self.steam_ids[name]}")
         continue
 
       self.ReplaceOrAppend(entry)
       
   def LoadFile(self, filename : str):
-    file = LoadJson(filename)
+    file = LoadJson(filename, self.Logger)
     
     if not file:
-      Logger.Warn(f"Could not load file {filename}")
+      self.Logger.Warn(f"Could not load file {filename}")
       return None
 
     self.LoadDict(file, filename)
@@ -60,7 +62,7 @@ class AppRanker:
         self.nicknames[name] = name
       
       entry = Entry(self.nicknames[name], file[name], "Unknown")
-      Logger.Info(f"Found entry in {filename}: {name} ")
+      self.Logger.Info(f"Found entry in {filename}: {name} ")
       self.ReplaceOrAppend(entry)
       
   def ReplaceOrAppend(self, entry):
@@ -87,9 +89,6 @@ class AppRanker:
       result = result + page
       
     if not result: 
-      result = Logger.GetWarnings()
+      result = self.Logger.GetWarnings()
       
     return result
-
-  def GetRawData(self):
-    return self.data
