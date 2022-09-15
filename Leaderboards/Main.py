@@ -209,7 +209,8 @@ async def settime(ctx, map, new_time, user:commands.MemberConverter=None):
 #Sets Member steam ID 
 @client.hybrid_command(help= "Set your steam id", aliases=["setsteamid", "setid", "id"])
 async def steamid(ctx, id, user: commands.MemberConverter=None):
-  if not await Utils.FindSettings(ctx.guild.id, ctx):
+  settings = await Utils.GetSettings(ctx.guild.id, ctx)
+  if not settings:
     return
   
   if user == None:
