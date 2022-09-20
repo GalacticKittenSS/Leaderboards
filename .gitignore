@@ -4,3 +4,4 @@ Maps/
 
 .breakpoints
 .env
+*.log

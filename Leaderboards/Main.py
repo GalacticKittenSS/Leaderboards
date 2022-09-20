@@ -47,6 +47,13 @@ coop = Storage.Coop
 #On Bot Ready
 @client.event
 async def on_ready():
+  Logger.Setup(
+    level = Logger.INFO,
+    fmt = "[%(asctime)s] [%(levelname)s] %(message)s",
+    datefmt = "%Y-%m-%d %H:%M:%S",
+    filename = "Leaderboards.log"
+  )
+  
   if client.sync_tree:
     Logger.Info("Syncing Bot Tree...")
     await client.tree.sync()
@@ -306,6 +313,6 @@ async def choosemap(ctx, cat_type=None):
   await ctx.reply(f"{Utils.FindValueInArray(choice, maps)} ({choice}) has been selected from {cat_type}.")
 
 #START
+Alive.keep_alive()
 Storage.Client = client
 client.run(Storage.BotKey)
-Alive.keep_alive()

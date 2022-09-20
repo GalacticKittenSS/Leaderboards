@@ -31,7 +31,7 @@ def LoadJson(path):
         with open(path, "r") as f:
             data = json.load(f)
     else:
-        Logger.Warn(f"File {path} does not exist!")
+        Logger.Error(f"File {path} does not exist!")
     
     return data 
 
@@ -41,12 +41,15 @@ def LoadJsonForGuild(path, guild_id : int):
       return {}
 
     if not str(guild_id) in data:
-      Logger.Warn(f"Guild ID was not found in file {path}")
+      Logger.Error(f"Guild ID was not found in file {path}")
       return {}
     
     return data[str(guild_id)]
 
 def DumpJson(path, js):
+    if not os.path.exists(os.path.dirname(path)):
+        os.mkdir(os.path.dirname(path))
+
     with open(path, "w") as f:
         json.dump(js, f, indent=2)      
 

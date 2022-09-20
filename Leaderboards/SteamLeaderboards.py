@@ -20,7 +20,9 @@ class LeaderboardGroup():
     
   def LoadSteamIDs(self, filename):
     self.steamIDs = Utils.LoadJsonForGuild(filename, self.guild_id)
-
+    if not self.nicknames:
+      Logger.Warnings.append(f"Steam ids for {self.guild_id} were not found")
+    
   def LoadUrl(self, url):
     res = requests.get(url)
 
@@ -60,7 +62,7 @@ class LeaderboardGroup():
 
       if entry:
         entry.SetName(self.nicknames[name])
-        Logger.Info(f"Found entry on Steam Leaderboards: {name}")
+        Logger.Debug(f"Found entry on Steam Leaderboards: {name}")
       else:
         Logger.Warn(f"Could not find entry {name} with id {self.steamIDs[name]}")
         continue
@@ -79,7 +81,7 @@ class LeaderboardGroup():
     file = Utils.LoadJsonForGuild(filename, self.guild_id)
     
     if not file:
-      Logger.Warn(f"Could not load file {filename}")
+      Logger.Warnings.append(f"Custom entries were not found")
       return None
 
     for name in file:
@@ -87,7 +89,7 @@ class LeaderboardGroup():
         self.nicknames[name] = name
       
       entry = BasicEntry(self.nicknames[name], file[name], "Unknown")
-      Logger.Info(f"Found entry in file {filename}: {name}")
+      Logger.Debug(f"Found entry in file {filename}: {name}")
       
       found = False
       for data in self.data:
@@ -124,7 +126,8 @@ class LeaderboardGroup():
       previous.score = key.score
       result = result + page
       
-    if not result: 
+    if not result:
+      Logger.Error("No Results were Found!")
       result = Logger.GetWarnings()
       
     return result

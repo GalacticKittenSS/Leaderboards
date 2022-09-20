@@ -6,10 +6,16 @@ import Setup
 import Logger
 import SteamLeaderboards
 
+Logger.Setup(
+    level = Logger.DEBUG,
+    fmt = "[%(asctime)s] [%(levelname)s] %(message)s",
+    datefmt = "%Y-%m-%d %H:%M:%S"
+)
+
 Logger.Info("Beginning SteamLeaderboards Tests\n")
 
 Guild_ID = 0
-tests_dir = "Tests/Data/"
+tests_dir = "Data/"
 id_file = f"{tests_dir}steam_ids.json"
 nickname_file = f"{tests_dir}nicknames.json"
 
