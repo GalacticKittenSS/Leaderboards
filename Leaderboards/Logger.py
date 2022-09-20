@@ -7,16 +7,19 @@ ERROR = logging.ERROR
 CRITICAL = logging.CRITICAL
 Warnings = []
 
-def Setup(level, fmt : str, datefmt : str = "%Y-%m-%d %H:%M:%S", filename : str = None):
+def Setup(level, fmt : str, datefmt : str = "%Y-%m-%d %H:%M:%S", filename : str = None, filelevel = None):
   formatter = logging.Formatter(fmt, datefmt)
 
   logger = logging.getLogger()
-  logger.setLevel(level)
+  logger.setLevel(logging.DEBUG)
 
   if filename:
+    if not filelevel:
+      filelevel = level
+    
     fileHandler = logging.FileHandler(filename)
     fileHandler.setFormatter(formatter)
-    fileHandler.setLevel(level)
+    fileHandler.setLevel(filelevel)
     logger.addHandler(fileHandler)
 
   consoleHandler = logging.StreamHandler()
