@@ -1,10 +1,6 @@
 import discord
 from discord.ext import commands
 
-import os
-import json
-import itertools
-
 import Storage
 
 class HelpView(discord.ui.View):
@@ -54,7 +50,7 @@ class Help(commands.DefaultHelpCommand):
     destination = self.get_destination()
     for page in self.paginator.pages:
       embed = discord.Embed(title="Help", description=page)
-      message = await destination.send(content="Showing Help...", embed=embed, view=HelpView(self, command_list, page))
+      await destination.send(content="Showing Help...", embed=embed, view=HelpView(self, command_list, page))
       
     self.paginator.clear()
   

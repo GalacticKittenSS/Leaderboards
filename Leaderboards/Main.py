@@ -48,7 +48,7 @@ coop = Storage.Coop
 @client.event
 async def on_ready():
   Logger.Setup(
-    level = Logger.INFO,
+    level = Logger.DEBUG,
     fmt = "[%(asctime)s] [%(levelname)s] %(message)s",
     datefmt = "%Y-%m-%d %H:%M:%S",
     filename = "Leaderboards.log"
