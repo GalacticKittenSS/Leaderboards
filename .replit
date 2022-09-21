@@ -1,2 +1,28 @@
 language = "python3"
-run = "python Leaderboards/Main.py"
+run = ["python", "Leaderboards/Main.py"]
+entrypoint = "Leaderboards/Main.py"
+hidden = [
+  "venv", ".config", 
+  "Scripts", "*/__pycache__"
+]
+
+[env]
+VIRTUAL_ENV = "/home/runner/${REPL_SLUG}/venv"
+PATH = "${VIRTUAL_ENV}/bin"
+PYTHONPATH = "${VIRTUAL_ENV}/lib/python3.10/site-packages"
+REPLIT_POETRY_PYPI_REPOSITORY = "https://package-proxy.replit.com/pypi/"
+POETRY_CACHE_DIR = "${HOME}/${REPL_SLUG}/.cache/pypoetry"
+
+[nix]
+channel = "stable-21_11"
+
+[packager]
+language = "python3"
+
+[packager.features]
+enabledForHosting = false
+packageSearch = true
+guessImports = true
+
+[debugger]
+support = false

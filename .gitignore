@@ -1,5 +1,6 @@
 Settings/
 Maps/
+venv/
 */__pycache__/
 
 .breakpoints
