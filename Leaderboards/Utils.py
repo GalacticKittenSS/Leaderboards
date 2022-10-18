@@ -65,11 +65,10 @@ async def UserHasRequiredRoles(required_roles, user, ctx):
   
   return found
 
-def FindValueInArray(val, arr):
-  if val not in arr:
-    for key in arr:
-      if arr[key] == val:
-        val = key
-        break
+def GetDictionaryKey(dictionary: dict, value):
+  keys = list(dictionary.keys())
+  values = list(dictionary.values())
 
-  return val
+  if value in keys: return value
+  if value in values: return keys[values.index(value)]
+  return None

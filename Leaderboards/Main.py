@@ -15,12 +15,7 @@ import Logger
 #Setup Bot
 async def get_prefix(client, message):
   settings = await Utils.GetSettings(message.guild.id)
-  prefix = "%"
-  
-  if settings:
-    prefix = settings["Prefix"]
-  
-  return prefix
+  return settings.get("Prefix", "%")
 
 activity = discord.Game(name="Now Using discord.py 2.0", type=3)
 customHelp = CustomHelp.Help()
@@ -29,19 +24,6 @@ intents.message_content = True
 
 client = commands.Bot(command_prefix=(get_prefix), intents=intents, help_command=customHelp, activity=activity, status=discord.Status.online)
 client.sync_tree = False #Only sync if changes have been made to hybrid commands 
-
-#Directories/Paths
-maps_directory = Storage.MapsDirectory
-settings_directory = Storage.SettingsDirectory
-
-maps_path = Storage.MapsPath
-nicknames_path = Storage.NicknamesPath
-ids_path = Storage.IDsPath
-
-#Maps/Categories
-nonNative = Storage.NonNative
-categories = Storage.Categories
-coop = Storage.Coop
 
 #EVENTS
 #On Bot Ready
@@ -81,7 +63,7 @@ async def setup(ctx, prefix:str, *, roles):
   file["PBList"]["Channel"] = ""
   file["PBList"]["Message"] = ""
   
-  Utils.DumpJson(f"{settings_directory}{ctx.guild.id}.json", file)
+  Utils.DumpJson(f"{Storage.SettingsDirectory}{ctx.guild.id}.json", file)
   await ctx.send(f"Setup Server with prefix {prefix} and mod roles {roles}!")
 
 #Gets and sets leaderboard time
@@ -99,8 +81,8 @@ async def leaderboard(ctx, map=None, user:commands.MemberConverter=None):
   tic = time.perf_counter()
   Logger.Info("Getting Leaderboards...")
 
-  listOfMaps = Utils.LoadJson(maps_path)
-  map = Utils.FindValueInArray(map, listOfMaps) 
+  listOfMaps = Utils.LoadJson(Storage.MapsPath)
+  map = Utils.GetDictionaryKey(listOfMaps, map) 
 
   if map == None:
     map = "Singleplayer No SLA"   
@@ -114,14 +96,14 @@ async def leaderboard(ctx, map=None, user:commands.MemberConverter=None):
 
       #Load Leaderboard
       lb = SteamLeaderboards.LeaderboardGroup(620, ctx.guild.id)
-      lb.LoadNicknames(nicknames_path)
+      lb.LoadNicknames(Storage.NicknamesPath)
 
       #If file exist add file data to leaderboard
-      lb.CreateFromFile(f"{maps_directory}{listOfMaps[map]}.json")
+      lb.CreateFromFile(f"{Storage.MapsDirectory}{listOfMaps[map]}.json")
       
       #If map is on steam Leaderboards, add to leaderboard group
-      if listOfMaps[map] not in nonNative:
-        lb.LoadSteamIDs(ids_path)
+      if listOfMaps[map] not in Storage.NonNative:
+        lb.LoadSteamIDs(Storage.IDsPath)
         lb.CreateFromSteam(f"challenge_besttime_{listOfMaps[map]}")
         url = lb.SteamLeaderboardNumber()
         
@@ -131,10 +113,10 @@ async def leaderboard(ctx, map=None, user:commands.MemberConverter=None):
       #Get User Specific Result
 
       #If map is on Steam Leaderboards, Get Rank and Score
-      if listOfMaps[map] not in nonNative:
+      if listOfMaps[map] not in Storage.NonNative:
         
         #Get Steam Id's
-        ids = Utils.LoadJson(ids_path)[str(ctx.guild.id)]
+        ids = Utils.LoadJson(Storage.IDsPath)[str(ctx.guild.id)]
         
         #Get Leaderboard from Map
         lb = SteamLeaderboards.Leaderboard(620, f"challenge_besttime_{listOfMaps[map]}")
@@ -147,9 +129,9 @@ async def leaderboard(ctx, map=None, user:commands.MemberConverter=None):
         result = f"**{user.name}**'s score on **{map}** is **{score.getTime()}**\n and is placed **#{score.getRank()}** on Steam leaderboards"
       
       #If file exist add file data to result
-      if os.path.exists(f"{maps_directory}{listOfMaps[map]}.json"):
+      if os.path.exists(f"{Storage.MapsDirectory}{listOfMaps[map]}.json"):
           #Get Map and Score from file
-          score = Utils.LoadJson(f"{maps_directory}{listOfMaps[map]}.json")[ctx.guild.id][user.name]
+          score = Utils.LoadJson(f"{Storage.MapsDirectory}{listOfMaps[map]}.json")[ctx.guild.id][user.name]
           #Set Result
           result = f"**{user.name}**'s score on **{map}** is **{score}**"
 
@@ -190,24 +172,24 @@ async def settime(ctx, map, new_time, user:commands.MemberConverter=None):
     if not hasRequiredRoles:
       return
 
-  listOfMaps = Utils.LoadJson(maps_path)
-  map = Utils.FindValueInArray(map, listOfMaps)    
+  listOfMaps = Utils.LoadJson(Storage.MapsPath)
+  map = Utils.GetDictionaryKey(listOfMaps, map)    
 
-  js = Utils.LoadJson(f"{maps_directory}{listOfMaps[map]}.json")
+  js = Utils.LoadJson(f"{Storage.MapsDirectory}{listOfMaps[map]}.json")
 
   if str(ctx.guild.id) not in js:
     js[str(ctx.guild.id)] = {}
 	
   js[str(ctx.guild.id)][user.name] = new_time
 
-  Utils.DumpJson(f"{maps_directory}{listOfMaps[map]}.json", js)
+  Utils.DumpJson(f"{Storage.MapsDirectory}{listOfMaps[map]}.json", js)
   await ctx.send(f"{user.name}'s' new time is **{new_time}**")
   
   # Edit PB List
   if listOfMaps[map] == "singleplayer":
     lb = SteamLeaderboards.LeaderboardGroup(620, ctx.guild.id)
-    lb.LoadNicknames(nicknames_path)
-    lb.CreateFromFile(f"{maps_directory}singleplayer.json")
+    lb.LoadNicknames(Storage.NicknamesPath)
+    lb.CreateFromFile(f"{Storage.MapsDirectory}singleplayer.json")
     result = lb.GetResult()
 
     pbList = Utils.LoadJson(f"Settings/{ctx.guild.id}.json")["PBList"]
@@ -228,14 +210,14 @@ async def steamid(ctx, id, user: commands.MemberConverter=None):
     if not hasRequiredRoles:
       return
 
-  new = Utils.LoadJson(ids_path)
+  new = Utils.LoadJson(Storage.IDsPath)
 
   if str(ctx.guild.id) not in new:
     new[str(ctx.guild.id)] = {}
 
   new[str(ctx.guild.id)][user.name] = str(id)
   
-  Utils.DumpJson(ids_path, new)
+  Utils.DumpJson(Storage.IDsPath, new)
   await ctx.reply(f"Set Steam Id for {user.name}")
 
 @client.hybrid_command(help="Creates personal best temporary message (Moderator Only)")
@@ -263,21 +245,21 @@ async def nickname(ctx, nickname, user:commands.MemberConverter=None):
     if not hasRequiredRoles:
       return
 
-  nicknames = Utils.LoadJson(nicknames_path)
+  nicknames = Utils.LoadJson(Storage.NicknamesPath)
 
   if str(ctx.guild.id) not in nicknames:
     nicknames[str(ctx.guild.id)] = {}
 
   nicknames[str(ctx.guild.id)][user.name] = nickname
 
-  Utils.DumpJson(nicknames_path, nicknames)
+  Utils.DumpJson(Storage.NicknamesPath, nicknames)
   await ctx.reply(content=f"Set {user.name}'s nickname to {nickname}")
 
   # Edit PB Message
-  if os.path.exists(F"{maps_directory}singleplayer.json"):
+  if os.path.exists(F"{Storage.MapsDirectory}singleplayer.json"):
     lb = SteamLeaderboards.LeaderboardGroup(620, ctx.guild.id)
-    lb.LoadNicknames(nicknames_path)
-    lb.CreateFromFile(f"{maps_directory}singleplayer.json")
+    lb.LoadNicknames(Storage.NicknamesPath)
+    lb.CreateFromFile(f"{Storage.MapsDirectory}singleplayer.json")
     result = lb.GetResult()
 
     pbList = Utils.LoadJson(f"Settings/{ctx.guild.id}.json")["PBList"]
@@ -286,32 +268,21 @@ async def nickname(ctx, nickname, user:commands.MemberConverter=None):
 
 #Spit out a random map
 @client.hybrid_command(help="Spit out a random map", aliases=["map", "choose"])
-async def choosemap(ctx, cat_type=None):
-  maps = Utils.LoadJson(maps_path)
-  mapList = []
+async def choosemap(ctx, cat_type="all"):
+  maps = Utils.LoadJson(Storage.MapsPath)
+  map_set = set(maps.values())
+  map_lists = {
+    "all" :           list(maps.keys()),
+    "maps" :          list(map_set.difference(set(Storage.Categories))),
+    "singleplayer" :  list(map_set.difference(set(Storage.Coop))),
+    "native" :        list(map_set.difference(set(Storage.NonNative))),
+    "coop":           Storage.Coop,
+    "nonnative":      Storage.NonNative, 
+    "category":       Storage.Categories 
+  }
 
-  if not cat_type:
-    cat_type = "All"
-
-  if cat_type.lower() == "nonnative":
-    mapList = nonNative
-  if cat_type.lower() == "category":
-    mapList = categories
-  elif cat_type.lower() == "coop":
-    mapList = coop
-  else:
-    for (key, val) in maps.items():
-      if cat_type.lower() == "all":
-        mapList.append(val)
-      elif cat_type.lower() == "native" and val not in nonNative:
-        mapList.append(val)
-      elif cat_type.lower() == "maps" and val not in categories:
-        mapList.append(val)
-      elif cat_type.lower() == "singleplayer" and val not in coop:
-        mapList.append(val)
-  
-  choice = random.choice(mapList)
-  await ctx.reply(f"{Utils.FindValueInArray(choice, maps)} ({choice}) has been selected from {cat_type}.")
+  choice = random.choice(map_lists.get("singleplayer".lower()))
+  await ctx.reply(f"{Utils.GetDictionaryKey(maps, choice)} ({choice}) has been selected from {cat_type}.")
 
 #START
 Alive.keep_alive()
